@@ -50,28 +50,29 @@ export default function BannerSlideshow({ shops }: { readonly shops: Shop[] }) {
         </div>
 
         <div
-          className="flex items-center gap-4 flex-1 transition-opacity duration-400"
+          className="flex items-center gap-3 flex-1 min-w-0 transition-opacity duration-400"
           style={{ opacity: visible ? 1 : 0 }}
         >
           <div className={`w-8 h-8 rounded-lg ${packageColors[shop.package]} text-white font-extrabold text-xs flex items-center justify-center shrink-0`}>
             {shop.logo}
           </div>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="font-semibold text-gray-800 text-sm">{shop.name}</span>
-            <span className="text-xs font-semibold text-gray-500">{packageLabel[shop.package]}</span>
-            <span className="text-gray-400 text-xs hidden md:inline">
-              {shop.city} · {shop.address}
-            </span>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-gray-800 text-sm truncate">{shop.name}</span>
+              <span className="text-xs font-semibold text-gray-500 shrink-0">{packageLabel[shop.package]}</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs mt-0.5">
+              <a href={`tel:${shop.phone}`} className="text-green-600 font-medium hover:underline shrink-0">
+                📞 {shop.phone}
+              </a>
+              {shop.website && (
+                <a href={`https://${shop.website}`} target="_blank" rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-gray-700 transition-colors hidden md:inline">
+                  🌐 {shop.website}
+                </a>
+              )}
+            </div>
           </div>
-          <a href={`tel:${shop.phone}`} className="text-green-600 text-xs font-medium hover:underline shrink-0">
-            📞 {shop.phone}
-          </a>
-          {shop.website && (
-            <a href={`https://${shop.website}`} target="_blank" rel="noopener noreferrer"
-              className="text-gray-400 text-xs hover:text-gray-700 transition-colors shrink-0 hidden md:inline">
-              🌐 {shop.website}
-            </a>
-          )}
         </div>
 
         {/* Dots */}

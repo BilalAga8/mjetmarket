@@ -13,7 +13,9 @@ import NewsletterSection from "./NewsletterSection";
 
 const partnerBg = ["bg-green-600", "bg-blue-600", "bg-orange-500", "bg-purple-600"];
 
-export default function CarBrowser({ cars, shops }: { readonly cars: Vehicle[]; readonly shops: Shop[] }) {
+interface Service { id: number; name: string; category: string; city: string; phone: string; logo: string; verified: boolean; }
+
+export default function CarBrowser({ cars, shops, services }: { readonly cars: Vehicle[]; readonly shops: Shop[]; readonly services: Service[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [fuel, setFuel] = useState("");
@@ -132,7 +134,7 @@ export default function CarBrowser({ cars, shops }: { readonly cars: Vehicle[]; 
         </div>
       </section>
 
-      <PartnerShopsBar />
+      <PartnerShopsBar services={services} />
       {shops.length > 0 && <BannerSlideshow shops={shops} />}
 
       {/* Makina e Javës */}
