@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ token_hash, type });
     if (!error) {
-      return NextResponse.redirect(`${origin}/profili`);
+      const next = type === "recovery" ? "/auth/reset-password" : "/profili";
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 

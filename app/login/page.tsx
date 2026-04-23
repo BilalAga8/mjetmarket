@@ -7,10 +7,12 @@ import { createClient } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"login" | "register">("login");
+  const [tab, setTab] = useState<"login" | "register" | "forgot">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [regData, setRegData] = useState({
@@ -69,6 +71,18 @@ export default function LoginPage() {
   const labelClass =
     "text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 block";
 
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/auth/confirm`,
+    });
+    setLoading(false);
+    setResetSent(true);
+  }
+
   if (registered) return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-10 text-center">
@@ -79,6 +93,41 @@ export default function LoginPage() {
           Kliko linkun për të aktivizuar llogarinë.
         </p>
         <p className="text-xs text-gray-400 mt-4">Nuk e gjen? Kontrollo edhe Spam/Junk.</p>
+      </div>
+    </div>
+  );
+
+  if (tab === "forgot") return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
+        {resetSent ? (
+          <div className="text-center">
+            <div className="text-4xl mb-3">📧</div>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Kontrollo emailin</h2>
+            <p className="text-sm text-gray-500">Dërguam linkun e resetimit te <strong>{forgotEmail}</strong>.</p>
+            <p className="text-xs text-gray-400 mt-2">Nuk e gjen? Kontrollo Spam/Junk.</p>
+            <button onClick={() => { setTab("login"); setResetSent(false); }} className="mt-5 text-sm text-green-600 font-semibold hover:underline">
+              ← Kthehu te login
+            </button>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Harrove fjalëkalimin?</h2>
+            <p className="text-sm text-gray-400 mb-6">Fut emailin dhe do të dërgojmë linkun e resetimit.</p>
+            <form onSubmit={handleForgot} className="flex flex-col gap-4">
+              <input type="email" required value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="emri@email.com"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-500" />
+              {error && <p className="text-red-500 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors">
+                {loading ? "Duke dërguar…" : "Dërgo Linkun"}
+              </button>
+              <button type="button" onClick={() => setTab("login")} className="text-sm text-gray-400 hover:underline">
+                ← Kthehu te login
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
@@ -142,6 +191,10 @@ export default function LoginPage() {
               <button type="submit" disabled={loading}
                 className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-1">
                 {loading ? "Duke hyrë..." : "Hyr"}
+              </button>
+              <button type="button" onClick={() => { setTab("forgot"); setError(""); }}
+                className="w-full text-center text-xs text-gray-400 hover:text-green-600 mt-2 transition-colors">
+                Harrove fjalëkalimin?
               </button>
             </form>
           ) : (
