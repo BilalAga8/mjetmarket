@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { vehicles } from "../../data/vehicles";
 import CarListItem from "../../components/CarListItem";
 import KerkoFilters from "../../components/KerkoFilters";
+
+export const metadata: Metadata = {
+  title: "Kërko Makina",
+  description: "Kërko dhe filtro mijëra makina të përdorura dhe të reja në Shqipëri. BMW, Mercedes, Audi, Toyota dhe shumë të tjera.",
+  keywords: ["kërko makina shqiperi", "makina te perdorura", "auto okazion", "makina te lira shqiperi", "blej makine shqiperi"],
+};
 
 export default async function KerkoPage({
   searchParams,

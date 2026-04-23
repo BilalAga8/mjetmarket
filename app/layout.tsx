@@ -20,7 +20,13 @@ export const metadata: Metadata = {
     template: "%s | MjetMarket",
   },
   description: "Platforma kryesore për blerjen dhe shitjen e makinave në Shqipëri. Mijëra oferta makinash, servise dhe pjesë këmbimi.",
-  keywords: ["makina shqiperi", "shitet makina", "blej makina", "auto shqiperi", "mjet market"],
+  keywords: [
+    "makina shqiperi", "shitet makina", "blej makina", "auto shqiperi", "mjet market",
+    "makina te perdorura", "auto okazion", "kerko makina", "makina te lira shqiperi",
+    "servis makine shqiperi", "servis mekanik tirane", "riparim makine",
+    "pjese kembimi makine", "auto parts shqiperi", "spare parts shqiperi",
+    "makina tirane", "makina durres", "shes makine shqiperi",
+  ],
   metadataBase: new URL("https://www.mjetmarket.com"),
   openGraph: {
     title: "MjetMarket — Blen dhe Shit Makina në Shqipëri",

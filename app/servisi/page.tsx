@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 import ServiceCard from "../../components/ServiceCard";
+
+export const metadata: Metadata = {
+  title: "Servise & Partnerë",
+  description: "Gjej servise të besuara për makinën tënde në Shqipëri. Servis mekanik, elektrik, bojaxhi, xhama dhe aksesore.",
+  keywords: ["servis makine shqiperi", "servis mekanik tirane", "riparim makine", "bojaxhi makine", "servis auto shqiperi"],
+};
 
 export const revalidate = 0;
 
