@@ -4,7 +4,7 @@ import { Vehicle } from "../data/vehicles";
 export default function CarListItem({ car }: { car: Vehicle }) {
   return (
     <Link
-      href={`/makina/${car.id}`}
+      href={`/makina/${(car as { slug?: string }).slug ?? car.id}`}
       className="group flex items-center gap-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 hover:border-green-200"
     >
       {/* Foto */}

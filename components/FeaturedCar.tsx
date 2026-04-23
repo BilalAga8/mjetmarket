@@ -14,7 +14,7 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
       </div>
 
       <Link
-        href={`/makina/${car.id}`}
+        href={`/makina/${(car as { slug?: string }).slug ?? car.id}`}
         className="group relative flex flex-col sm:flex-row overflow-hidden rounded-2xl border-2 border-yellow-400 shadow-lg hover:shadow-xl transition-all duration-300 bg-white"
       >
         {/* Badge */}

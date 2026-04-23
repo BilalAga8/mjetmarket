@@ -3,7 +3,7 @@ import { Vehicle } from "../data/vehicles";
 
 export default function CarCard({ car }: { car: Vehicle }) {
   return (
-    <Link href={`/makina/${car.id}`} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 block">
+    <Link href={`/makina/${(car as { slug?: string }).slug ?? car.id}`} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 block">
       <div className="relative overflow-hidden h-40">
         <img
           src={car.image}

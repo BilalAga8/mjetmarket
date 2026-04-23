@@ -1,5 +1,27 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { supabase } from "../../../lib/supabase";
+
+export async function generateMetadata({ params }: { readonly params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(id);
+  const { data: car } = await (isUUID
+    ? supabase.from("vehicles").select("brand,model,year,price,images,description").eq("id", id).single()
+    : supabase.from("vehicles").select("brand,model,year,price,images,description").eq("slug", id).single());
+  if (!car) return { title: "Mjet | MjetMarket" };
+  const title = `${car.brand} ${car.model} ${car.year} — ${car.price.toLocaleString()} €`;
+  const description = car.description || `${car.brand} ${car.model} ${car.year}, ${car.price.toLocaleString()} € në MjetMarket.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: car.images?.[0] ? [{ url: car.images[0] }] : [],
+      type: "website",
+    },
+  };
+}
 import CarGallery from "../../../components/CarGallery";
 import CarCard from "../../../components/CarCard";
 import ContactButtons from "../../../components/ContactModal";
@@ -14,12 +36,11 @@ export default async function CarPage({
   readonly params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(id);
 
-  const { data: car } = await supabase
-    .from("vehicles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data: car } = await (isUUID
+    ? supabase.from("vehicles").select("*").eq("id", id).single()
+    : supabase.from("vehicles").select("*").eq("slug", id).single());
 
   if (!car) notFound();
 
