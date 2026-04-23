@@ -31,7 +31,7 @@ export default function Navbar() {
             </svg>
           </div>
           <span className="text-lg font-extrabold tracking-tight text-gray-900">
-            Shitet<span className="text-green-500">Makina</span>
+            Mjet<span className="text-green-500">Market</span>
           </span>
         </Link>
 
