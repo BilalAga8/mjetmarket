@@ -4,10 +4,11 @@ import { supabase } from "../lib/supabase";
 export const revalidate = 0;
 
 export default async function Home() {
-  const [{ data: vehicleData }, { data: shopData }, { data: serviceData }] = await Promise.all([
+  const [{ data: vehicleData }, { data: shopData }, { data: serviceData }, { data: partnerData }] = await Promise.all([
     supabase.from("vehicles").select("*").order("created_at", { ascending: false }),
     supabase.from("shops").select("*").order("package").order("name"),
     supabase.from("services").select("id, name, category, city, phone, logo, verified").eq("verified", true).limit(4),
+    supabase.from("part_partners").select("*").order("id").limit(4),
   ]);
 
   const vehicles = (vehicleData ?? []).map((v) => ({
@@ -19,5 +20,5 @@ export default async function Home() {
     features: v.features ?? [],
   }));
 
-  return <CarBrowser cars={vehicles as never} shops={shopData ?? []} services={serviceData ?? []} />;
+  return <CarBrowser cars={vehicles as never} shops={shopData ?? []} services={serviceData ?? []} partners={partnerData ?? []} />;
 }

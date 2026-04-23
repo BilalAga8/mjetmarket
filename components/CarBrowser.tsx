@@ -7,15 +7,15 @@ import { Shop } from "../data/shops";
 import CarCard from "./CarCard";
 import PartnerShopsBar from "./PartnerShopsBar";
 import BannerSlideshow from "./BannerSlideshow";
-import { partPartners } from "../data/partPartners";
 import FeaturedCar from "./FeaturedCar";
 import NewsletterSection from "./NewsletterSection";
 
 const partnerBg = ["bg-green-600", "bg-blue-600", "bg-orange-500", "bg-purple-600"];
 
 interface Service { id: number; name: string; category: string; city: string; phone: string; logo: string; verified: boolean; }
+interface Partner { id: string; name: string; city: string; discount: number; phone: string; logo: string; type: string; }
 
-export default function CarBrowser({ cars, shops, services }: { readonly cars: Vehicle[]; readonly shops: Shop[]; readonly services: Service[] }) {
+export default function CarBrowser({ cars, shops, services, partners }: { readonly cars: Vehicle[]; readonly shops: Shop[]; readonly services: Service[]; readonly partners: Partner[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [fuel, setFuel] = useState("");
@@ -190,7 +190,7 @@ export default function CarBrowser({ cars, shops, services }: { readonly cars: V
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {partPartners.map((partner, i) => (
+          {partners.map((partner, i) => (
             <a
               key={partner.id}
               href="/pjese-kembimi"
