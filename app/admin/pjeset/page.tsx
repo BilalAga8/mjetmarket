@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { STATUS_LABELS, STATUS_COLORS } from "../../../data/partRequests";
 import type { PartRequest, OrderStatus, PartnerType } from "../../../data/partRequests";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
+const supabase = createClient();
 
 const PARTNERS: { value: PartnerType; label: string; type: string }[] = [
   { value: "A", label: "Partner A", type: "Dropshipping" },

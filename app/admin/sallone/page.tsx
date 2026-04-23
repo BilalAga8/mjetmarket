@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
+const supabase = createClient();
 import { albanianCities } from "../../../data/cities";
 
 type PackageType = "bronze" | "silver" | "gold";
