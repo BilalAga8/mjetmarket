@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [registered, setRegistered] = useState(false);
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [regData, setRegData] = useState({
@@ -59,14 +60,28 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.push("/profili");
-    router.refresh();
+    setRegistered(true);
+    setLoading(false);
   }
 
   const inputClass =
     "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent";
   const labelClass =
     "text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1 block";
+
+  if (registered) return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-10 text-center">
+        <div className="text-5xl mb-4">📧</div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Kontrollo emailin tënd</h2>
+        <p className="text-gray-500 text-sm">
+          Dërguam një link konfirmimi te <strong>{regData.email}</strong>.<br />
+          Kliko linkun për të aktivizuar llogarinë.
+        </p>
+        <p className="text-xs text-gray-400 mt-4">Nuk e gjen? Kontrollo edhe Spam/Junk.</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
