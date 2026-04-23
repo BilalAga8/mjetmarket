@@ -18,7 +18,7 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-gray-900 text-lg font-extrabold tracking-tight">
-                Shitet<span className="text-green-500">Makina</span>
+                Mjet<span className="text-green-500">Market</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed max-w-xs text-gray-500">
@@ -57,7 +57,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-200 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-400">
-          <span>© {new Date().getFullYear()} ShitetMakina. Të gjitha të drejtat e rezervuara.</span>
+          <span>© {new Date().getFullYear()} MjetMarket. Të gjitha të drejtat e rezervuara.</span>
           <div className="flex gap-4">
             <Link href="/privatesia" className="hover:text-gray-900 transition-colors">Politika e Privatësisë</Link>
             <Link href="/kushtet" className="hover:text-gray-900 transition-colors">Kushtet e Përdorimit</Link>

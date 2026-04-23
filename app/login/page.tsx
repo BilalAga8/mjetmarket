@@ -146,7 +146,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <span className="text-xl font-extrabold text-gray-900 tracking-tight">
-              Shitet<span className="text-green-500">Makina</span>
+              Mjet<span className="text-green-500">Market</span>
             </span>
           </Link>
           <p className="text-gray-500 text-sm mt-2">

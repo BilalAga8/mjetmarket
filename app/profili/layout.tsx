@@ -57,7 +57,7 @@ export default function ProfiliLayout({ children }: { children: React.ReactNode 
               </svg>
             </div>
             <span className="text-sm font-extrabold text-gray-900 tracking-tight">
-              Shitet<span className="text-green-500">Makina</span>
+              Mjet<span className="text-green-500">Market</span>
             </span>
           </Link>
           <p className="text-xs text-gray-400 mt-1 ml-10">Paneli im</p>
@@ -106,7 +106,7 @@ export default function ProfiliLayout({ children }: { children: React.ReactNode 
               <circle cx="20" cy="21" r="1" />
             </svg>
           </div>
-          <span className="text-sm font-extrabold text-gray-900">Shitet<span className="text-green-500">Makina</span></span>
+          <span className="text-sm font-extrabold text-gray-900">Mjet<span className="text-green-500">Market</span></span>
         </Link>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-sm font-bold">

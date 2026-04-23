@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: { readonly children: React.Rea
               </svg>
             </div>
             <span className="text-sm font-extrabold text-white tracking-tight">
-              Shitet<span className="text-green-500">Makina</span>
+              Mjet<span className="text-green-500">Market</span>
             </span>
           </Link>
           <p className="text-xs text-gray-500 mt-1 ml-10">Admin Panel</p>
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { readonly children: React.Rea
               <circle cx="20" cy="21" r="1" />
             </svg>
           </div>
-          <span className="text-sm font-extrabold text-white">Shitet<span className="text-green-500">Makina</span> <span className="text-gray-500 font-normal text-xs">Admin</span></span>
+          <span className="text-sm font-extrabold text-white">Mjet<span className="text-green-500">Market</span> <span className="text-gray-500 font-normal text-xs">Admin</span></span>
         </Link>
         <button onClick={handleLogout} className="text-xs text-gray-500 hover:text-red-400 transition-colors">Dil</button>
       </div>

@@ -57,7 +57,7 @@ export default function AdminLogin() {
               </svg>
             </div>
             <span className="text-xl font-extrabold text-white tracking-tight">
-              Shitet<span className="text-green-500">Makina</span>
+              Mjet<span className="text-green-500">Market</span>
             </span>
           </Link>
           <h1 className="text-2xl font-bold text-white">Paneli i Adminit</h1>

@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
                 <circle cx="20" cy="21" r="1" />
               </svg>
             </div>
-            <span className="text-xl font-extrabold text-gray-900">Shitet<span className="text-green-500">Makina</span></span>
+            <span className="text-xl font-extrabold text-gray-900">Mjet<span className="text-green-500">Market</span></span>
           </Link>
         </div>
 
