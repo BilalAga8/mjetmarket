@@ -23,7 +23,7 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
         </div>
 
         {/* Foto */}
-        <div className="sm:w-1/2 h-56 sm:h-72 overflow-hidden shrink-0">
+        <div className="sm:w-1/2 h-56 sm:h-72 overflow-hidden shrink-0 sm:self-center sm:rounded-xl sm:m-3">
           <img
             src={car.image}
             alt={`${car.brand} ${car.model}`}
@@ -32,17 +32,17 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
         </div>
 
         {/* Info */}
-        <div className="flex-1 p-6 flex flex-col justify-between">
+        <div className="flex-1 p-4 flex flex-col justify-between">
           <div>
-            <p className="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-1">{car.category}</p>
-            <h3 className="text-2xl font-extrabold text-gray-900 mb-1">
+            <p className="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-0.5">{car.category}</p>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-0.5">
               {car.brand} {car.model}
             </h3>
-            <p className="text-3xl font-extrabold text-green-600 mb-4">
+            <p className="text-2xl font-extrabold text-green-600 mb-3">
               {car.price.toLocaleString()} €
             </p>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="grid grid-cols-2 gap-1.5 mb-3">
               {[
                 { label: "Viti", value: car.year },
                 { label: "Karburanti", value: car.fuel },
@@ -51,7 +51,7 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
                 { label: "Kambio", value: car.transmission },
                 { label: "Ngjyra", value: car.color },
               ].map((s) => (
-                <div key={s.label} className="bg-gray-50 rounded-xl px-3 py-2">
+                <div key={s.label} className="bg-gray-50 rounded-xl px-3 py-1.5">
                   <p className="text-xs text-gray-400">{s.label}</p>
                   <p className="text-sm font-bold text-gray-800">{s.value}</p>
                 </div>
@@ -60,7 +60,7 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="flex-1 bg-yellow-400 group-hover:bg-yellow-500 text-yellow-900 font-bold py-3 rounded-xl text-center transition-colors text-sm">
+            <span className="flex-1 bg-yellow-400 group-hover:bg-yellow-500 text-yellow-900 font-bold py-2.5 rounded-xl text-center transition-colors text-sm">
               Shiko Detajet →
             </span>
           </div>
