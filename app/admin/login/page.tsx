@@ -11,6 +11,19 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/confirm`,
+    });
+    setLoading(false);
+    setResetSent(true);
+  }
 
   async function handleLogin(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -85,7 +98,30 @@ export default function AdminLogin() {
             className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors duration-200 mt-1">
             {loading ? "Duke hyrë..." : "Hyr në Panel"}
           </button>
+          <button type="button" onClick={() => { setForgot(true); setError(""); }}
+            className="w-full text-center text-xs text-gray-500 hover:text-green-500 transition-colors mt-1">
+            Harrove fjalëkalimin?
+          </button>
         </form>
+
+        {forgot && (
+          <form onSubmit={handleForgot} className="bg-gray-900 rounded-2xl p-6 border border-gray-800 flex flex-col gap-4 mt-4">
+            {resetSent ? (
+              <p className="text-green-400 text-sm text-center">✓ Email u dërgua — kontrollo kutinë hyrëse.</p>
+            ) : (
+              <>
+                <p className="text-xs text-gray-400">Fut emailin e adminit dhe do dërgojmë linkun e resetimit.</p>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@email.com"
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-500 placeholder:text-gray-600" />
+                <button type="submit" disabled={loading}
+                  className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+                  {loading ? "Duke dërguar…" : "Dërgo Linkun"}
+                </button>
+              </>
+            )}
+          </form>
+        )}
       </div>
     </div>
   );
