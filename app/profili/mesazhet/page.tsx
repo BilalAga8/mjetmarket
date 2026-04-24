@@ -47,7 +47,8 @@ export default function MesazhetPage() {
       const [{ data: inqData }, { data: chatData }] = await Promise.all([
         supabase
           .from("vehicle_inquiries")
-          .select("id, name, phone, message, created_at, vehicles(brand, model, year)")
+          .select("id, name, phone, message, created_at, vehicles!inner(brand, model, year, user_id)")
+          .eq("vehicles.user_id", user.id)
           .order("created_at", { ascending: false }),
         supabase
           .from("chats")
