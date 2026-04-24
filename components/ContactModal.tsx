@@ -47,6 +47,7 @@ export default function ContactButtons({ brand, model, phone = "+355 69 123 4567
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
+    console.log("handleSend vehicleId:", vehicleId, "name:", form.name.trim());
     if (!vehicleId || !form.name.trim()) return;
     setSending(true);
     const supabase = createClient();
