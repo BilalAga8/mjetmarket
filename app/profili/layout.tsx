@@ -11,6 +11,7 @@ const navItems = [
   { href: "/profili",             label: "Paneli",      icon: "📊", exact: true },
   { href: "/profili/njoftimet",   label: "Njoftimet",   icon: "🚗" },
   { href: "/profili/mesazhet",    label: "Mesazhet",    icon: "✉️" },
+  { href: "/profili/chat",        label: "Chat",        icon: "💬" },
   { href: "/profili/shto-mjet",   label: "Shto",        icon: "➕" },
   { href: "/profili/statistikat", label: "Statistikat", icon: "📈" },
   { href: "/profili/cilesimet",   label: "Cilësimet",   icon: "⚙️" },

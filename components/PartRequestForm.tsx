@@ -4,13 +4,22 @@ import { useState } from "react";
 import { partCategories } from "../data/partCategories";
 import { supabase } from "../lib/supabase";
 
+interface Service {
+  id: number;
+  name: string;
+  city: string;
+  phone: string;
+}
+
 interface Props {
   preselectedPart?: string;
   onClose?: () => void;
+  services?: Service[];
 }
 
-export default function PartRequestForm({ preselectedPart = "", onClose }: Props) {
+export default function PartRequestForm({ preselectedPart = "", onClose, services = [] }: Props) {
   const [submitted, setSubmitted] = useState(false);
+  const [showServices, setShowServices] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -35,22 +44,60 @@ export default function PartRequestForm({ preselectedPart = "", onClose }: Props
 
   if (submitted) {
     return (
-      <div className="text-center py-10 px-6">
-        <div className="w-16 h-16 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+      <div className="py-8 px-6">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Kërkesa u dërgua!</h3>
+          <p className="text-gray-500 text-sm">
+            Do t'ju kontaktojmë në numrin <strong>{form.phone}</strong> sa më shpejt.
+          </p>
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Kërkesa u dërgua!</h3>
-        <p className="text-gray-500 text-sm mb-6">
-          Do t'ju kontaktojmë në numrin <strong>{form.phone}</strong> sa më shpejt.
-        </p>
-        <button
-          onClick={onClose}
-          className="bg-green-600 text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-green-700 transition-colors text-sm"
-        >
-          Mbyll
-        </button>
+
+        {services.length > 0 && !showServices && (
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-4 text-center">
+            <p className="text-sm font-bold text-gray-900 mb-1">Ju duhet instalim?</p>
+            <p className="text-xs text-gray-500 mb-4">Gjej një servis afër jush ku mund të instaloni pjesën.</p>
+            <div className="flex gap-2 justify-center">
+              <button onClick={() => setShowServices(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+                Po, gjej servis
+              </button>
+              <button onClick={onClose}
+                className="border border-gray-200 text-gray-500 text-sm font-semibold px-5 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+                Jo, faleminderit
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showServices && (
+          <div className="flex flex-col gap-2 mb-4 max-h-64 overflow-y-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Servise të disponueshme</p>
+            {services.map((s) => (
+              <div key={s.id} className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{s.name}</p>
+                  <p className="text-xs text-gray-400">{s.city}</p>
+                </div>
+                <a href={`tel:${s.phone.replace(/\s/g, "")}`}
+                  className="text-xs bg-green-50 text-green-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors shrink-0">
+                  📞 Telefono
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(!services.length || showServices) && (
+          <button onClick={onClose}
+            className="w-full bg-green-600 text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-green-700 transition-colors text-sm">
+            Mbyll
+          </button>
+        )}
       </div>
     );
   }

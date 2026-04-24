@@ -12,11 +12,13 @@ export const metadata: Metadata = {
 
 export const revalidate = 0;
 
+interface Service { id: number; name: string; city: string; phone: string; category: string; }
+
 export default async function PjeseKembimiPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("services")
-    .select("id, name, category, city, phone, logo, verified")
+    .select("*")
     .order("verified", { ascending: false })
     .order("name");
 
@@ -24,7 +26,7 @@ export default async function PjeseKembimiPage() {
 
   return (
     <>
-      <PjeseKembimiClient categories={partCategories} />
+      <PjeseKembimiClient categories={partCategories} services={services as Service[]} />
 
       {/* Seksioni i serviseve */}
       <div className="bg-gray-50 border-t border-gray-200 py-12 px-4 sm:px-6">

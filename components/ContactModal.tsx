@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
 interface Props {
@@ -15,6 +16,28 @@ export default function ContactButtons({ brand, model, phone = "+355 69 123 4567
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const router = useRouter();
+
+  async function openChat() {
+    if (!vehicleId) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/login"); return; }
+
+    const { data: vehicle } = await supabase
+      .from("vehicles").select("user_id").eq("id", vehicleId).single();
+    if (!vehicle) return;
+
+    const { data: existing } = await supabase
+      .from("chats").select("id").eq("vehicle_id", vehicleId).eq("buyer_id", user.id).single();
+
+    if (existing) { router.push(`/profili/chat/${existing.id}`); return; }
+
+    const { data: newChat } = await supabase
+      .from("chats").insert({ vehicle_id: vehicleId, buyer_id: user.id, seller_id: vehicle.user_id }).select("id").single();
+
+    if (newChat) router.push(`/profili/chat/${newChat.id}`);
+  }
 
   function close() {
     setMode("idle");
@@ -46,14 +69,22 @@ export default function ContactButtons({ brand, model, phone = "+355 69 123 4567
           onClick={() => setMode("call")}
           className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
         >
-          Kontakto Shitësin
+          Kontakto
         </button>
         <button
           onClick={() => setMode("message")}
           className="flex-1 border-2 border-green-600 text-green-600 hover:bg-green-50 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
         >
-          Dërgo Mesazh
+          Mesazh
         </button>
+        {vehicleId && (
+          <button
+            onClick={openChat}
+            className="flex-1 border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"
+          >
+            Chat
+          </button>
+        )}
         <button
           onClick={() => document.getElementById("kalkulator")?.scrollIntoView({ behavior: "smooth" })}
           title="Kalkulator Kredie"

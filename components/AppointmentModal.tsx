@@ -21,11 +21,11 @@ interface Props {
 
 export default function AppointmentModal({ vehicleId, brand, model, year, services }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", date: "", serviceId: "", note: "" });
+  const [form, setForm] = useState({ name: "", phone: "", date: "", time: "", serviceId: "", serviceType: "", note: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  function close() { setOpen(false); setSent(false); setForm({ name: "", phone: "", date: "", serviceId: "", note: "" }); }
+  function close() { setOpen(false); setSent(false); setForm({ name: "", phone: "", date: "", time: "", serviceId: "", serviceType: "", note: "" }); }
 
   const selectedService = services.find((s) => String(s.id) === form.serviceId);
 
@@ -36,11 +36,13 @@ export default function AppointmentModal({ vehicleId, brand, model, year, servic
     const servicePart = selectedService
       ? ` | Servisi: ${selectedService.name}, ${selectedService.city} (${selectedService.phone})`
       : "";
+    const typePart = form.serviceType ? ` | Lloji: ${form.serviceType}` : "";
+    const timePart = form.time ? ` ${form.time}` : "";
     await supabase.from("vehicle_inquiries").insert({
       vehicle_id: vehicleId,
       name: form.name.trim(),
       phone: form.phone.trim() || null,
-      message: `TAKIM PËR KONTROLL — Data: ${form.date}${servicePart}${form.note ? ` | Shënim: ${form.note}` : ""}`,
+      message: `TAKIM PËR KONTROLL — Data: ${form.date}${timePart}${typePart}${servicePart}${form.note ? ` | Shënim: ${form.note}` : ""}`,
     });
     setSending(false);
     setSent(true);
@@ -100,10 +102,30 @@ export default function AppointmentModal({ vehicleId, brand, model, year, servic
                   <input required type="tel" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                     placeholder="+355 69 000 0000" className={inputClass} />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Data *</label>
+                    <input required type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                      min={new Date().toISOString().split("T")[0]} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Ora</label>
+                    <input type="time" value={form.time} onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))}
+                      className={inputClass} />
+                  </div>
+                </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Data e preferuar *</label>
-                  <input required type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
-                    min={new Date().toISOString().split("T")[0]} className={inputClass} />
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Lloji i kontrollit</label>
+                  <select value={form.serviceType} onChange={(e) => setForm((p) => ({ ...p, serviceType: e.target.value }))}
+                    className={inputClass + " bg-white"}>
+                    <option value="">— Zgjidh —</option>
+                    <option>Kontroll i përgjithshëm</option>
+                    <option>Kontroll para blerjes</option>
+                    <option>Diagnozë kompjuterike</option>
+                    <option>Kontroll i frenave</option>
+                    <option>Kontroll i motorit</option>
+                    <option>Tjetër</option>
+                  </select>
                 </div>
 
                 {services.length > 0 && (

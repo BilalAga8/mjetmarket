@@ -16,7 +16,7 @@ export default async function KerkoPage({
 }: {
   readonly searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const { q, fuel, year, maxPrice, maxKm, transmission } = await searchParams;
+  const { q, fuel, year, maxPrice, maxKm, transmission, city, exchange } = await searchParams;
 
   const supabase = await createClient();
   let query = supabase
@@ -27,9 +27,11 @@ export default async function KerkoPage({
   if (q) query = query.or(`brand.ilike.%${q}%,model.ilike.%${q}%`);
   if (fuel) query = query.eq("fuel", fuel);
   if (transmission) query = query.eq("transmission", transmission);
+  if (city) query = query.eq("city", city);
   if (year) query = query.gte("year", Number(year));
   if (maxPrice) query = query.lte("price", Number(maxPrice));
   if (maxKm) query = query.lte("km", Number(maxKm));
+  if (exchange) query = query.not("exchange", "is", null);
 
   const { data: vehicles } = await query;
   const results = vehicles ?? [];

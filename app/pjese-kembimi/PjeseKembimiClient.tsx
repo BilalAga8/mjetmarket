@@ -8,11 +8,14 @@ import PartRequestForm from "../../components/PartRequestForm";
 
 const bgColors = ["bg-green-600", "bg-blue-600", "bg-orange-500", "bg-purple-600"];
 
+interface Service { id: number; name: string; city: string; phone: string; category: string; }
+
 interface Props {
   categories: PartCategory[];
+  services?: Service[];
 }
 
-export default function PjeseKembimiClient({ categories }: Props) {
+export default function PjeseKembimiClient({ categories, services = [] }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState("");
   const [search, setSearch] = useState("");
@@ -135,6 +138,7 @@ export default function PjeseKembimiClient({ categories }: Props) {
             <PartRequestForm
               preselectedPart={selectedPart}
               onClose={() => setModalOpen(false)}
+              services={services}
             />
           </div>
         </div>
