@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -31,17 +31,14 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect /profili/*
   if (pathname.startsWith("/profili") && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Protect /admin/* (except /admin/login)
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     if (!user) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
-    // Lexo rolin nga JWT app_metadata — nuk kërkon query DB
     if (user.app_metadata?.role !== "admin") {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
