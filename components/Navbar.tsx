@@ -69,7 +69,7 @@ export default function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-3 shrink-0">
           <Link
-            href="#"
+            href={user ? "/profili/shto-mjet" : "/login"}
             className="hidden sm:block bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors duration-200"
           >
             + Shto Njoftim
@@ -171,7 +171,7 @@ export default function Navbar() {
             </Link>
           )}
           <Link
-            href="#"
+            href={user ? "/profili/shto-mjet" : "/login"}
             onClick={() => setOpen(false)}
             className="mt-1 w-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors text-center"
           >

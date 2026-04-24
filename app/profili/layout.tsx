@@ -10,26 +10,28 @@ type Profile = { emri: string; mbiemri: string; email: string };
 const navItems = [
   { href: "/profili",             label: "Paneli",      icon: "📊", exact: true },
   { href: "/profili/njoftimet",   label: "Njoftimet",   icon: "🚗" },
+  { href: "/profili/mesazhet",    label: "Mesazhet",    icon: "✉️" },
   { href: "/profili/shto-mjet",   label: "Shto",        icon: "➕" },
   { href: "/profili/statistikat", label: "Statistikat", icon: "📈" },
   { href: "/profili/cilesimet",   label: "Cilësimet",   icon: "⚙️" },
 ];
 
-export default function ProfiliLayout({ children }: { children: React.ReactNode }) {
+export default function ProfiliLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.replace("/login"); return; }
-      const { data } = await supabase
-        .from("profiles")
-        .select("emri, mbiemri")
-        .eq("id", user.id)
-        .single();
-      setProfile({ emri: data?.emri ?? "", mbiemri: data?.mbiemri ?? "", email: user.email ?? "" });
+      const [{ data: prof }, { count }] = await Promise.all([
+        supabase.from("profiles").select("emri, mbiemri").eq("id", user.id).single(),
+        supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false),
+      ]);
+      setProfile({ emri: prof?.emri ?? "", mbiemri: prof?.mbiemri ?? "", email: user.email ?? "" });
+      setUnread(count ?? 0);
     });
   }, [router]);
 
@@ -72,7 +74,12 @@ export default function ProfiliLayout({ children }: { children: React.ReactNode 
                   active ? "bg-green-50 text-green-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}>
                 <span>{item.icon}</span>
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.href === "/profili/mesazhet" && unread > 0 && (
+                  <span className="bg-green-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                    {unread}
+                  </span>
+                )}
               </Link>
             );
           })}
