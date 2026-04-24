@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PjeseKembimiClient from "./PjeseKembimiClient";
 import { partCategories } from "../../data/partCategories";
 import { createClient } from "@/lib/supabase-server";
@@ -49,14 +48,6 @@ export default async function PjeseKembimiPage() {
             </div>
           )}
 
-          <div className="mt-8 text-center">
-            <Link
-              href="/servisi"
-              className="text-sm text-green-600 font-semibold hover:underline"
-            >
-              Shiko të gjitha servise →
-            </Link>
-          </div>
         </div>
       </div>
     </>

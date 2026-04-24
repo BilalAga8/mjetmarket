@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { readonly params: Promise<{ 
 import CarGallery from "../../../components/CarGallery";
 import CarCard from "../../../components/CarCard";
 import ContactButtons from "../../../components/ContactModal";
+import AppointmentModal from "../../../components/AppointmentModal";
 import LoanCalculator from "../../../components/LoanCalculator";
 import Link from "next/link";
 
@@ -48,6 +49,12 @@ export default async function CarPage({
   const serverClient = await createServerClient();
   const { data: { user } } = await serverClient.auth.getUser();
   const isOwner = !!user && user.id === car.user_id;
+
+  const { data: servicesData } = await serverClient
+    .from("services")
+    .select("id, name, city, phone, category")
+    .eq("verified", true)
+    .order("name");
 
   const { data: similarData } = await supabase
     .from("vehicles")
@@ -126,7 +133,16 @@ export default async function CarPage({
                 Ky është njoftimi juaj
               </div>
             ) : (
-              <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
+              <div className="flex flex-col gap-3">
+                <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
+                <AppointmentModal
+                  vehicleId={car.id}
+                  brand={car.brand}
+                  model={car.model}
+                  year={car.year}
+                  services={servicesData ?? []}
+                />
+              </div>
             )}
           </div>
         </div>
