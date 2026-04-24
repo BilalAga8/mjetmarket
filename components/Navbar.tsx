@@ -9,8 +9,7 @@ import type { User } from "@supabase/supabase-js";
 const links = [
   { href: "/", label: "Kreu" },
   { href: "/kerko", label: "Kërko Makina" },
-  { href: "/pjese-kembimi", label: "Pjesë Këmbimi" },
-  { href: "/servisi", label: "Servisi" },
+  { href: "/pjese-kembimi", label: "Pjesë & Servise" },
   { href: "/kontakti", label: "Kontakt" },
 ];
 
