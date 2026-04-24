@@ -5,10 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { albanianCities } from "../../../../data/cities";
 
-const vehicleCategories: [string, string][] = [
-  ["🚗", "Makinë"], ["🚛", "Kamion"], ["🏍️", "Motor"],
-  ["⛵", "Varkë"], ["🚜", "Trailer"], ["🚌", "Tjetër"],
-];
+const vehicleCategories: string[] = ["Makinë", "Kamion", "Motor", "Varkë", "Trailer", "Tjetër"];
 
 const tireOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
@@ -167,10 +164,10 @@ export default function EditoMjetPage() {
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-bold text-gray-900 mb-4">Lloji i Mjetit</h2>
           <div className="grid grid-cols-3 gap-2">
-            {vehicleCategories.map(([icon, label]) => (
+            {vehicleCategories.map((label) => (
               <label key={label} className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer transition-colors ${form.category === label ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-green-300"}`}>
                 <input type="radio" name="category" value={label} checked={form.category === label} onChange={onChange} className="accent-green-500" />
-                <span className="text-sm">{icon} {label}</span>
+                <span className="text-sm font-medium">{label}</span>
               </label>
             ))}
           </div>

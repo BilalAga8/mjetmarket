@@ -153,7 +153,6 @@ export default function CarBrowser({ cars, shops, services, partners }: { readon
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
               }`}
             >
-              {cat !== "Të gjitha" && categoryIcons[cat as Category]}
               {cat}
             </button>
           ))}

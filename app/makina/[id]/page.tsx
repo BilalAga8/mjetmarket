@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { supabase } from "../../../lib/supabase";
+import { createClient as createServerClient } from "../../../lib/supabase-server";
 
 export async function generateMetadata({ params }: { readonly params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -43,6 +44,10 @@ export default async function CarPage({
     : supabase.from("vehicles").select("*").eq("slug", id).single());
 
   if (!car) notFound();
+
+  const serverClient = await createServerClient();
+  const { data: { user } } = await serverClient.auth.getUser();
+  const isOwner = !!user && user.id === car.user_id;
 
   const { data: similarData } = await supabase
     .from("vehicles")
@@ -116,7 +121,13 @@ export default async function CarPage({
               ))}
             </div>
 
-            <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
+            {isOwner ? (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium text-center">
+                Ky është njoftimi juaj
+              </div>
+            ) : (
+              <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
+            )}
           </div>
         </div>
 
