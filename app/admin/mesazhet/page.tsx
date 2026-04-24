@@ -42,6 +42,12 @@ export default function AdminMesazhet() {
       });
   }, []);
 
+  async function deleteInquiry(id: string) {
+    if (!confirm("Fshij këtë mesazh?")) return;
+    await supabase.from("vehicle_inquiries").delete().eq("id", id);
+    setInquiries((prev) => prev.filter((i) => i.id !== id));
+  }
+
   const filtered = inquiries.filter((i) => {
     if (filter === "appointments") return isAppointment(i.message);
     if (filter === "messages") return !isAppointment(i.message);
@@ -125,18 +131,24 @@ export default function AdminMesazhet() {
                   </p>
                 )}
 
-                {inq.phone && (
-                  <div className="flex gap-2">
-                    <a href={`tel:${inq.phone.replace(/\s/g, "")}`}
-                      className="text-xs bg-green-900 text-green-300 hover:bg-green-800 font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                      📞 Telefono
-                    </a>
-                    <a href={`https://wa.me/${inq.phone.replace(/[\s+]/g, "")}`} target="_blank" rel="noopener noreferrer"
-                      className="text-xs bg-[#1a3a2a] text-[#25D366] hover:bg-[#1f4a33] font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                      WhatsApp
-                    </a>
-                  </div>
-                )}
+                <div className="flex gap-2 flex-wrap">
+                  {inq.phone && (
+                    <>
+                      <a href={`tel:${inq.phone.replaceAll(" ", "")}`}
+                        className="text-xs bg-green-900 text-green-300 hover:bg-green-800 font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                        📞 Telefono
+                      </a>
+                      <a href={`https://wa.me/${inq.phone.replaceAll(" ", "").replaceAll("+", "")}`} target="_blank" rel="noopener noreferrer"
+                        className="text-xs bg-[#1a3a2a] text-[#25D366] hover:bg-[#1f4a33] font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                        WhatsApp
+                      </a>
+                    </>
+                  )}
+                  <button onClick={() => deleteInquiry(inq.id)}
+                    className="text-xs bg-red-900 text-red-300 hover:bg-red-800 font-semibold px-3 py-1.5 rounded-lg transition-colors ml-auto">
+                    Fshij
+                  </button>
+                </div>
               </div>
             );
           })}
