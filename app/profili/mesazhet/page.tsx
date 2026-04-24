@@ -9,7 +9,7 @@ interface Inquiry {
   phone: string | null;
   message: string | null;
   created_at: string;
-  vehicles: { brand: string; model: string; year: number } | null;
+  vehicles: { brand: string; model: string; year: number }[] | null;
 }
 
 function timeAgo(dateStr: string) {
@@ -83,9 +83,9 @@ export default function MesazhetPage() {
                 <span className="text-xs text-gray-400 shrink-0">{timeAgo(inq.created_at)}</span>
               </div>
 
-              {inq.vehicles && (
+              {inq.vehicles?.[0] && (
                 <div className="mt-3 bg-gray-50 rounded-xl px-3 py-2 text-xs text-gray-500">
-                  🚗 {inq.vehicles.brand} {inq.vehicles.model} {inq.vehicles.year}
+                  🚗 {inq.vehicles[0].brand} {inq.vehicles[0].model} {inq.vehicles[0].year}
                 </div>
               )}
 
