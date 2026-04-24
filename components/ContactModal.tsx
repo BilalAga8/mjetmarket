@@ -50,12 +50,17 @@ export default function ContactButtons({ brand, model, phone = "+355 69 123 4567
     if (!vehicleId || !form.name.trim()) return;
     setSending(true);
     const supabase = createClient();
-    await supabase.from("vehicle_inquiries").insert({
+    const { error } = await supabase.from("vehicle_inquiries").insert({
       vehicle_id: vehicleId,
       name: form.name.trim(),
       phone: form.phone.trim() || null,
       message: form.message.trim() || null,
     });
+    if (error) {
+      console.error("vehicle_inquiries insert error:", error);
+      setSending(false);
+      return;
+    }
     setSending(false);
     setSent(true);
   }
