@@ -45,7 +45,7 @@ export default function CarBrowser({ cars, shops, services, partners }: { readon
       {/* Hero */}
       <section className="relative flex flex-col justify-end">
         <Image
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&q=75"
+          src="/hero.jpg"
           alt="Hero makina"
           fill
           priority
