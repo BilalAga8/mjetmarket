@@ -21,14 +21,14 @@ export default function PartnerShopsBar({ services }: { readonly services: Servi
         <div className="flex items-center gap-2 mb-2.5">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Servise Partnere</span>
           <span className="flex-1 h-px bg-gray-100" />
-          <Link href="/servisi" className="text-xs text-green-600 font-semibold hover:underline">
+          <Link href="/pjese-kembimi" className="text-xs text-green-600 font-semibold hover:underline">
             Shiko të gjitha →
           </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {services.slice(0, 4).map((s, i) => (
-            <Link key={s.id} href="/servisi"
+            <Link key={s.id} href="/pjese-kembimi"
               className="flex items-center gap-3 bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-300 rounded-xl px-3 py-2.5 transition-all group">
               <div className={`w-9 h-9 ${bgColors[i % bgColors.length]} rounded-lg flex items-center justify-center text-white text-xs font-extrabold shrink-0`}>
                 {s.logo || s.name[0]}
