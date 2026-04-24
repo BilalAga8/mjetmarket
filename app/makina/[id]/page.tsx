@@ -116,7 +116,7 @@ export default async function CarPage({
               ))}
             </div>
 
-            <ContactButtons brand={car.brand} model={car.model} phone={car.phone ?? undefined} vehicleId={car.id} />
+            <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
           </div>
         </div>
 
