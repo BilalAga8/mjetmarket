@@ -36,6 +36,7 @@ export const metadata: Metadata = {
     siteName: "MjetMarket",
     locale: "sq_AL",
     type: "website",
+    images: [{ url: "/hero.jpg", width: 1200, height: 630, alt: "MjetMarket" }],
   },
 };
 
