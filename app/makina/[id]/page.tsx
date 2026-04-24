@@ -27,6 +27,7 @@ import CarGallery from "../../../components/CarGallery";
 import CarCard from "../../../components/CarCard";
 import ContactButtons from "../../../components/ContactModal";
 import AppointmentModal from "../../../components/AppointmentModal";
+import ViewTracker from "../../../components/ViewTracker";
 import LoanCalculator from "../../../components/LoanCalculator";
 import Link from "next/link";
 
@@ -96,6 +97,7 @@ export default async function CarPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ViewTracker vehicleId={car.id} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-green-600 mb-6 transition-colors">
           ← Kthehu
