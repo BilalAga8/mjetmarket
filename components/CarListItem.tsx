@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export interface DbVehicle {
   id: string;
@@ -23,12 +24,14 @@ export default function CarListItem({ car }: Readonly<{ car: DbVehicle }>) {
       href={`/makina/${car.id}`}
       className="group flex items-center gap-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 hover:border-green-200"
     >
-      <div className="w-36 h-24 shrink-0 overflow-hidden bg-gray-100 flex items-center justify-center">
+      <div className="w-36 h-24 shrink-0 overflow-hidden bg-gray-100 flex items-center justify-center relative">
         {image ? (
-          <img
+          <Image
             src={image}
             alt={`${car.brand} ${car.model}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="144px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <span className="text-3xl">🚗</span>
