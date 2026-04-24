@@ -32,8 +32,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     const supabase = createClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
       setUserId(user.id);
 
@@ -60,7 +62,7 @@ export default function ChatPage() {
         .eq("chat_id", chatId)
         .neq("sender_id", user.id);
 
-      const channel = supabase
+      channel = supabase
         .channel(`chat-${chatId}`)
         .on("postgres_changes", {
           event: "INSERT",
@@ -71,9 +73,11 @@ export default function ChatPage() {
           setMessages((prev) => [...prev, payload.new as Message]);
         })
         .subscribe();
+    }
 
-      return () => { supabase.removeChannel(channel); };
-    });
+    init();
+
+    return () => { if (channel) supabase.removeChannel(channel); };
   }, [chatId, router]);
 
   useEffect(() => {
