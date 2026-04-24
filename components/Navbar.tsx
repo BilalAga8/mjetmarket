@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase-browser";
+import type { User } from "@supabase/supabase-js";
 
 const links = [
   { href: "/", label: "Kreu" },
@@ -14,7 +16,25 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <nav className="bg-white text-gray-800 border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -54,16 +74,38 @@ export default function Navbar() {
           >
             + Shto Njoftim
           </Link>
-          <Link
-            href="/login"
-            className="hidden md:flex w-9 h-9 rounded-xl border border-gray-200 hover:border-green-500 items-center justify-center text-gray-500 hover:text-green-500 transition-colors duration-200"
-            title="Hyr / Regjistrohu"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-            </svg>
-          </Link>
+          {user ? (
+            <div className="hidden md:flex items-center gap-2">
+              <Link
+                href="/profili"
+                className="flex w-9 h-9 rounded-xl border border-green-500 items-center justify-center text-green-500 transition-colors duration-200"
+                title="Profili im"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                title="Dil"
+              >
+                Dil
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden md:flex w-9 h-9 rounded-xl border border-gray-200 hover:border-green-500 items-center justify-center text-gray-500 hover:text-green-500 transition-colors duration-200"
+              title="Hyr / Regjistrohu"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+            </Link>
+          )}
 
           {/* Hamburger — mobile only */}
           <button
@@ -97,16 +139,37 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors mt-1 border-t border-gray-100 pt-3"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-            </svg>
-            Hyr / Regjistrohu
-          </Link>
+          {user ? (
+            <>
+              <Link
+                href="/profili"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors mt-1 border-t border-gray-100 pt-3"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+                Profili im
+              </Link>
+              <button
+                onClick={() => { setOpen(false); handleLogout(); }}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+              >
+                Dil
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors mt-1 border-t border-gray-100 pt-3"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              Hyr / Regjistrohu
+            </Link>
+          )}
           <Link
             href="#"
             onClick={() => setOpen(false)}
