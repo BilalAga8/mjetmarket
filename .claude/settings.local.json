@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(gh repo *)",
+      "Bash(where gh *)",
+      "Bash(winget list *)",
+      "Bash(git add *)"
+    ]
+  }
+}
