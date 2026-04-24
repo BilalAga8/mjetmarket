@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Vehicle, Category, categoryIcons } from "../data/vehicles";
 import { Shop } from "../data/shops";
 import CarCard from "./CarCard";
@@ -42,14 +43,15 @@ export default function CarBrowser({ cars, shops, services, partners }: { readon
   return (
     <>
       {/* Hero */}
-      <section
-        className="relative flex flex-col justify-end"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=80')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <section className="relative flex flex-col justify-end">
+        <Image
+          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&q=75"
+          alt="Hero makina"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
 
