@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "../../lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
+const supabase = createClient();
 
 export default function KontaktiPage() {
   const [form, setForm] = useState({ full_name: "", phone: "", message: "" });

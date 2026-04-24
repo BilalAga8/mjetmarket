@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { partCategories } from "../data/partCategories";
-import { supabase } from "../lib/supabase";
+import { createClient } from "../lib/supabase-browser";
+const supabase = createClient();
 
 interface Service {
   id: number;
