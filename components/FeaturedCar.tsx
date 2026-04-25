@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Vehicle } from "../data/vehicles";
 
 export default function FeaturedCar({ car }: { car: Vehicle }) {
@@ -23,11 +24,13 @@ export default function FeaturedCar({ car }: { car: Vehicle }) {
         </div>
 
         {/* Foto */}
-        <div className="sm:w-1/2 h-56 sm:h-72 overflow-hidden shrink-0 sm:self-center sm:rounded-xl sm:m-3">
-          <img
+        <div className="relative sm:w-1/2 h-56 sm:h-72 overflow-hidden shrink-0 sm:self-center sm:rounded-xl sm:m-3">
+          <Image
             src={car.image}
             alt={`${car.brand} ${car.model}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, 50vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>
 

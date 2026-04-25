@@ -23,16 +23,10 @@ export default function StatistikatPage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
 
-      const [{ data: vehs }, { count: msgCount }] = await Promise.all([
-        supabase
-          .from("vehicles")
-          .select("id, brand, model, year, price")
-          .eq("user_id", user.id),
-        supabase
-          .from("vehicle_inquiries")
-          .select("id, vehicles!inner(user_id)", { count: "exact", head: true })
-          .eq("vehicles.user_id", user.id),
-      ]);
+      const { data: vehs } = await supabase
+        .from("vehicles")
+        .select("id, brand, model, year, price")
+        .eq("user_id", user.id);
 
       if (!vehs || vehs.length === 0) {
         setLoading(false);
@@ -40,10 +34,16 @@ export default function StatistikatPage() {
       }
 
       const vehicleIds = vehs.map((v) => v.id);
-      const { data: viewData } = await supabase
-        .from("vehicle_views")
-        .select("vehicle_id")
-        .in("vehicle_id", vehicleIds);
+      const [{ data: viewData }, { count: msgCount }] = await Promise.all([
+        supabase
+          .from("vehicle_views")
+          .select("vehicle_id")
+          .in("vehicle_id", vehicleIds),
+        supabase
+          .from("vehicle_inquiries")
+          .select("id", { count: "exact", head: true })
+          .in("vehicle_id", vehicleIds),
+      ]);
 
       const viewCounts: Record<string, number> = {};
       (viewData ?? []).forEach((v) => {

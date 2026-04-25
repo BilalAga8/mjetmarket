@@ -1,5 +1,6 @@
 import CarBrowser from "../components/CarBrowser";
 import { supabase } from "../lib/supabase";
+import type { Vehicle } from "../data/vehicles";
 
 export const revalidate = 0;
 
@@ -20,5 +21,5 @@ export default async function Home() {
     features: v.features ?? [],
   }));
 
-  return <CarBrowser cars={vehicles as never} shops={shopData ?? []} services={serviceData ?? []} partners={partnerData ?? []} />;
+  return <CarBrowser cars={vehicles as unknown as Vehicle[]} shops={shopData ?? []} services={serviceData ?? []} partners={partnerData ?? []} />;
 }

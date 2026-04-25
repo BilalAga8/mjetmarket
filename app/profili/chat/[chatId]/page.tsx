@@ -46,6 +46,9 @@ export default function ChatPage() {
         .single();
 
       if (!chatData) { router.replace("/profili/mesazhet"); return; }
+      if (user.id !== chatData.buyer_id && user.id !== chatData.seller_id) {
+        router.replace("/profili/mesazhet"); return;
+      }
       setChat(chatData as ChatInfo);
 
       const { data: msgs } = await supabase
@@ -89,12 +92,12 @@ export default function ChatPage() {
     if (!input.trim() || !chat) return;
     setSending(true);
     const supabase = createClient();
-    await supabase.from("chat_messages").insert({
+    const { error } = await supabase.from("chat_messages").insert({
       chat_id: chatId,
       sender_id: userId,
       body: input.trim(),
     });
-    setInput("");
+    if (!error) setInput("");
     setSending(false);
   }
 

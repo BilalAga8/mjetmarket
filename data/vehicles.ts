@@ -1,7 +1,8 @@
 export type Category = "Makinë" | "Kamion" | "Motor" | "Varkë" | "Trailer" | "Tjetër";
 
 export type Vehicle = {
-  id: number;
+  id: string | number;
+  slug?: string;
   category: Category;
   brand: string;
   model: string;

@@ -1,15 +1,22 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Vehicle } from "../data/vehicles";
 
 export default function CarCard({ car }: { car: Vehicle }) {
   return (
-    <Link href={`/makina/${(car as { slug?: string }).slug ?? car.id}`} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 block">
+    <Link href={`/makina/${car.slug ?? car.id}`} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 block">
       <div className="relative overflow-hidden h-40">
-        <img
-          src={car.image}
-          alt={car.model}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
+        {car.image ? (
+          <Image
+            src={car.image}
+            alt={car.model}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-3xl">🚗</div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <span className="absolute top-3 left-3 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
           {car.year}
