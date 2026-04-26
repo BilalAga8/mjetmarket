@@ -34,6 +34,7 @@ export default function Footer() {
               <li><Link href="/kerko" className="hover:text-gray-900 transition-colors">Kërko Makina</Link></li>
               <li><Link href="/pjese-kembimi" className="hover:text-gray-900 transition-colors">Pjesë Këmbimi</Link></li>
               <li><Link href="/profili/shto-mjet" className="hover:text-gray-900 transition-colors">Shto Njoftim</Link></li>
+              <li><Link href="/faq" className="hover:text-gray-900 transition-colors">FAQ</Link></li>
               <li><Link href="/kontakti" className="hover:text-gray-900 transition-colors">Kontakt</Link></li>
             </ul>
           </div>
