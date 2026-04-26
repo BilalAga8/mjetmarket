@@ -1,5 +1,5 @@
 export type OrderStatus = "pritje" | "proces" | "derguar" | "mbyllur";
-export type PartnerType = "A" | "B" | "C" | "D" | null;
+export type PartnerType = string | null;
 
 export interface PartRequest {
   id: string;

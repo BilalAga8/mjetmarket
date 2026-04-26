@@ -1,32 +1,148 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PjeseKembimiClient from "./PjeseKembimiClient";
 import { partCategories } from "../../data/partCategories";
 import { createClient } from "@/lib/supabase-server";
 import ServiceCard from "../../components/ServiceCard";
 
-export const metadata: Metadata = {
-  title: "Pjesë Këmbimi & Servise",
-  description: "Porosit pjesë këmbimi dhe gjej servise të besuara për makinën tënde në Shqipëri.",
-  keywords: ["pjese kembimi makine", "auto parts shqiperi", "servis makine shqiperi", "spare parts shqiperi"],
-};
+const BASE = "https://www.mjetmarket.com";
+
+interface PageProps {
+  searchParams: Promise<{ category?: string; quality?: string; make?: string }>;
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const { category, quality, make } = await searchParams;
+
+  const qualityLabel: Record<string, string> = {
+    oem: "OEM Origjinale", ekuivalente: "Ekuivalente", ekonomike: "Ekonomike",
+  };
+
+  let title = "Pjesë Këmbimi & Servise Auto | MjetMarket";
+  let description =
+    "Porosit pjesë këmbimi dhe gjej servise të besuara për makinën tënde në Shqipëri. Filtra OEM, ekuivalente dhe ekonomike.";
+
+  if (category && make) {
+    title = `${category} për ${make} — Çmimi dhe Oferta | MjetMarket`;
+    description = `Gjej ${category.toLowerCase()} të përshtatshme për ${make} me çmimin më të mirë në Shqipëri. OEM dhe ekuivalente.`;
+  } else if (category) {
+    title = `${category} — Çmimi dhe Oferta | MjetMarket`;
+    description = `Porosit ${category.toLowerCase()} cilësor për makinën tënde. Oferta nga dyqane të besuara në Shqipëri.`;
+  } else if (quality) {
+    title = `Pjesë Këmbimi ${qualityLabel[quality] ?? quality} | MjetMarket`;
+    description = `Blen pjesë këmbimi ${(qualityLabel[quality] ?? quality).toLowerCase()} për makinën tënde. Çmime konkurruese, dërgesë në të gjithë Shqipërinë.`;
+  }
+
+  const canonical = category
+    ? `${BASE}/pjese-kembimi?category=${encodeURIComponent(category)}`
+    : `${BASE}/pjese-kembimi`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      "pjese kembimi makine", "auto parts shqiperi", "servis makine shqiperi",
+      "spare parts shqiperi", "filtro vaji", "cubeta frenash", "amortizatore",
+      ...(category ? [category.toLowerCase(), `${category.toLowerCase()} shqiperi`] : []),
+      ...(make ? [`${make.toLowerCase()} pjese kembimi`, `${make.toLowerCase()} servis shqiperi`] : []),
+    ],
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      siteName: "MjetMarket",
+      locale: "sq_AL",
+      images: [{ url: `${BASE}/hero.jpg`, width: 1200, height: 630, alt: title }],
+    },
+    alternates: { canonical },
+  };
+}
 
 export const revalidate = 0;
 
 interface Service { id: number; name: string; city: string; phone: string; category: string; }
 
-export default async function PjeseKembimiPage() {
+export default async function PjeseKembimiPage({ searchParams }: PageProps) {
+  const { category, quality } = await searchParams;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("services")
-    .select("*")
-    .order("verified", { ascending: false })
-    .order("name");
 
-  const services = data ?? [];
+  const [{ data: servicesData }, { data: productsData }] = await Promise.all([
+    supabase.from("services").select("*").order("verified", { ascending: false }).order("name"),
+    supabase.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+  ]);
+
+  const services = servicesData ?? [];
+  const products = productsData ?? [];
+
+  // JSON-LD: BreadcrumbList
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Kreu", item: BASE },
+      { "@type": "ListItem", position: 2, name: "Pjesë Këmbimi", item: `${BASE}/pjese-kembimi` },
+      ...(category ? [{ "@type": "ListItem", position: 3, name: category, item: `${BASE}/pjese-kembimi?category=${encodeURIComponent(category)}` }] : []),
+    ],
+  };
+
+  // JSON-LD: ItemList for products
+  const productJsonLd = products.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: category ? `${category} — MjetMarket` : "Pjesë Këmbimi — MjetMarket",
+    url: `${BASE}/pjese-kembimi`,
+    numberOfItems: products.length,
+    itemListElement: products.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        name: p.name,
+        description: `${p.category}${p.oem_code ? ` — Kodi OEM: ${p.oem_code}` : ""}`,
+        brand: p.compatible_makes?.length ? { "@type": "Brand", name: p.compatible_makes[0] } : undefined,
+        offers: (p.price_from || p.price_to) ? {
+          "@type": "AggregateOffer",
+          lowPrice: p.price_from ?? p.price_to,
+          highPrice: p.price_to ?? p.price_from,
+          priceCurrency: "EUR",
+          offerCount: p.shops_count ?? 1,
+          availability: "https://schema.org/InStock",
+        } : undefined,
+      },
+    })),
+  } : null;
 
   return (
     <>
-      <PjeseKembimiClient categories={partCategories} services={services as Service[]} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {productJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
+      )}
+
+      <Suspense fallback={
+        <PjeseKembimiClient
+          categories={partCategories}
+          services={services as Service[]}
+          products={[]}
+          initialCategory={category}
+          initialQuality={quality}
+        />
+      }>
+        <PjeseKembimiClient
+          categories={partCategories}
+          services={services as Service[]}
+          products={products}
+          initialCategory={category}
+          initialQuality={quality}
+        />
+      </Suspense>
 
       {/* Seksioni i serviseve */}
       <div className="bg-gray-50 border-t border-gray-200 py-12 px-4 sm:px-6">
@@ -39,7 +155,6 @@ export default async function PjeseKembimiPage() {
               </p>
             </div>
           </div>
-
           {services.length === 0 ? (
             <p className="text-gray-400 text-sm">Nuk ka servise të regjistruara ende.</p>
           ) : (
@@ -49,7 +164,6 @@ export default async function PjeseKembimiPage() {
               ))}
             </div>
           )}
-
         </div>
       </div>
     </>

@@ -14,20 +14,32 @@ interface Service {
 
 interface Props {
   preselectedPart?: string;
+  preselectedVin?: string;
+  preselectedMake?: string;
+  preselectedModel?: string;
+  preselectedYear?: string;
   onClose?: () => void;
   services?: Service[];
 }
 
-export default function PartRequestForm({ preselectedPart = "", onClose, services = [] }: Props) {
+export default function PartRequestForm({
+  preselectedPart = "",
+  preselectedVin = "",
+  preselectedMake = "",
+  preselectedModel = "",
+  preselectedYear = "",
+  onClose,
+  services = [],
+}: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [showServices, setShowServices] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
-    vin: "",
-    vehicle_make: "",
-    vehicle_model: "",
-    vehicle_year: "",
+    vin: preselectedVin,
+    vehicle_make: preselectedMake,
+    vehicle_model: preselectedModel,
+    vehicle_year: preselectedYear,
     part_description: preselectedPart,
     product_quality: "",
     extra_notes: "",

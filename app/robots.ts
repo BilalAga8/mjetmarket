@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin/", "/profili/", "/auth/"],
+      disallow: ["/admin/", "/profili/", "/auth/", "/dyqani/"],
     },
     sitemap: "https://www.mjetmarket.com/sitemap.xml",
   };
