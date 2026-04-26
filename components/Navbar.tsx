@@ -10,6 +10,7 @@ const links = [
   { href: "/", label: "Kreu" },
   { href: "/kerko", label: "Kërko Makina" },
   { href: "/pjese-kembimi", label: "Pjesë & Servise" },
+  { href: "/blog", label: "Blog" },
   { href: "/faq", label: "FAQ" },
   { href: "/kontakti", label: "Kontakt" },
 ];
