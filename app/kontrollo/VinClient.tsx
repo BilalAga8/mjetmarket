@@ -13,6 +13,15 @@ interface VinData {
   fuel: string;
   transmission: string;
   displacement: string;
+  bodyClass: string;
+  doors: string;
+  driveType: string;
+  cylinders: string;
+  hp: string;
+  turbo: string;
+  series: string;
+  trim: string;
+  plantCountry: string;
 }
 
 interface Recommendations {
@@ -54,11 +63,16 @@ function normalizeMake(make: string): string {
   return m.split("-")[0].split(" ")[0];
 }
 
-function getRecommendations(make: string, fuel: string, year: number): Recommendations {
+function getRecommendations(make: string, fuel: string, year: number, turbo: string): Recommendations {
   const norm = normalizeMake(make);
   const fuelKey = fuel.toLowerCase().includes("diesel") ? "diesel" : "benzine";
   const oilKey = `${norm}_${fuelKey}`;
-  const oil = oilMap[oilKey] || oilMap["DEFAULT"];
+  let oil = oilMap[oilKey] || oilMap["DEFAULT"];
+
+  // Turbo kërkon vaj sintetik të plotë me viskozitet më të ulët
+  if (turbo.toLowerCase() === "yes" && !oil.viscosity.startsWith("0W")) {
+    oil = { ...oil, viscosity: `0W-${oil.viscosity.split("-")[1] ?? "40"}`, type: oil.type + " (Full Synthetic — Turbo)" };
+  }
 
   const longInterval = longIntervalMakes.includes(norm);
   const interval = longInterval ? "Çdo 15,000 km ose 1 vit" : "Çdo 10,000 km ose 1 vit";
@@ -69,8 +83,8 @@ function getRecommendations(make: string, fuel: string, year: number): Recommend
 
   return {
     engineOil: { type: oil.type, viscosity: oil.viscosity, liters: oil.liters },
-    oilFilter: `${norm} ${norm === "DEFAULT" ? "Universal" : ""} OEM`,
-    airFilter: `${norm} OEM ${year > 2010 ? "/ Mann Filter" : ""}`,
+    oilFilter: `${norm === "DEFAULT" ? "Universal" : norm} OEM`,
+    airFilter: `${norm === "DEFAULT" ? "Universal" : norm} OEM${year > 2010 ? " / Mann Filter" : ""}`,
     tireSize: "Shih kartonin brenda derës ose dokumenteve",
     serviceInterval: interval,
     gearboxOil,
@@ -112,14 +126,23 @@ export default function VinClient({ services }: { services: Service[] }) {
       const json = await res.json();
       const results = json.Results ?? [];
 
-      const make  = getField(results, "Make");
-      const model = getField(results, "Model");
-      const yearStr = getField(results, "Model Year");
-      const year  = parseInt(yearStr) || 0;
-      const engine = getField(results, "Engine Configuration");
-      const fuel   = getField(results, "Fuel Type - Primary") || "Benzinë";
+      const make         = getField(results, "Make");
+      const model        = getField(results, "Model");
+      const yearStr      = getField(results, "Model Year");
+      const year         = parseInt(yearStr) || 0;
+      const engine       = getField(results, "Engine Configuration");
+      const fuel         = getField(results, "Fuel Type - Primary") || "Benzinë";
       const transmission = getField(results, "Transmission Style");
       const displacement = getField(results, "Displacement (L)");
+      const bodyClass    = getField(results, "Body Class");
+      const doors        = getField(results, "Number of Doors");
+      const driveType    = getField(results, "Drive Type");
+      const cylinders    = getField(results, "Engine Number of Cylinders");
+      const hp           = getField(results, "Engine Brake (hp) From");
+      const turbo        = getField(results, "Turbo");
+      const series       = getField(results, "Series");
+      const trim         = getField(results, "Trim");
+      const plantCountry = getField(results, "Plant Country");
 
       if (!make || !model || !year) {
         setError("VIN-i nuk u njoh. Kontrollo nëse e ke shtypur saktë ose plotëso të dhënat manualisht.");
@@ -128,9 +151,12 @@ export default function VinClient({ services }: { services: Service[] }) {
         return;
       }
 
-      const data: VinData = { make, model, year, engine, fuel, transmission, displacement };
+      const data: VinData = {
+        make, model, year, engine, fuel, transmission, displacement,
+        bodyClass, doors, driveType, cylinders, hp, turbo, series, trim, plantCountry,
+      };
       setVinData(data);
-      setRecs(getRecommendations(make, fuel, year));
+      setRecs(getRecommendations(make, fuel, year, turbo));
     } catch {
       setError("Gabim gjatë lidhjes me server-in. Provo përsëri.");
     } finally {
@@ -145,9 +171,11 @@ export default function VinClient({ services }: { services: Service[] }) {
       make: manual.make, model: manual.model, year,
       engine: "", fuel: manual.fuel === "diesel" ? "Diesel" : "Benzinë",
       transmission: "", displacement: "",
+      bodyClass: "", doors: "", driveType: "", cylinders: "",
+      hp: "", turbo: "", series: "", trim: "", plantCountry: "",
     };
     setVinData(data);
-    setRecs(getRecommendations(manual.make, manual.fuel, year));
+    setRecs(getRecommendations(manual.make, manual.fuel, year, ""));
     setShowManual(false);
     setError("");
   }
@@ -276,18 +304,29 @@ export default function VinClient({ services }: { services: Service[] }) {
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
               <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">Të dhënat e mjetit</h2>
               <div className="divide-y divide-gray-50">
-                {[
+                {([
                   ["Marka", vinData.make],
                   ["Modeli", vinData.model],
                   ["Viti", vinData.year],
-                  ["Motori", vinData.engine || "—"],
+                  ["Lloji", vinData.bodyClass || "—"],
+                  ["Dyert", vinData.doors || "—"],
+                  ["Traksi", vinData.driveType || "—"],
                   ["Karburanti", vinData.fuel || "—"],
-                  ["Kambja", vinData.transmission || "—"],
                   ["Cilindrata", vinData.displacement ? `${vinData.displacement}L` : "—"],
-                ].map(([label, value]) => (
-                  <div key={label as string} className="flex justify-between py-2.5 text-sm">
+                  ["Cilindra", vinData.cylinders || "—"],
+                  ["Fuqia", vinData.hp ? `${vinData.hp} HP` : "—"],
+                  ["Turbo", vinData.turbo === "Yes" ? "✓ Po" : vinData.turbo === "No" ? "Jo" : "—"],
+                  ["Kambja", vinData.transmission || "—"],
+                  ["Motori", vinData.engine || "—"],
+                  ["Seria", vinData.series || "—"],
+                  ["Trim", vinData.trim || "—"],
+                  ["Vendi prodhimit", vinData.plantCountry || "—"],
+                ] as [string, string | number][]).filter(([, v]) => v && v !== "—").map(([label, value]) => (
+                  <div key={label} className="flex justify-between py-2 text-sm">
                     <span className="text-gray-500">{label}</span>
-                    <span className="font-semibold text-gray-900">{value}</span>
+                    <span className={`font-semibold ${label === "Turbo" && value === "✓ Po" ? "text-orange-500" : "text-gray-900"}`}>
+                      {value}
+                    </span>
                   </div>
                 ))}
               </div>
