@@ -2,6 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { addPost, updatePost, deletePost } from "./actions";
+import { createClient } from "@/lib/supabase-browser";
+
+const supabase = createClient();
+
+async function uploadCover(file: File): Promise<string> {
+  const ext  = file.name.split(".").pop();
+  const path = `blog/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("vehicle-images").upload(path, file, { upsert: true });
+  if (error) throw new Error(error.message);
+  const { data: { publicUrl } } = supabase.storage.from("vehicle-images").getPublicUrl(path);
+  return publicUrl;
+}
 
 type Post = {
   id: number;
@@ -43,6 +55,24 @@ function PostForm({
   const inputCls = "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500 placeholder:text-gray-600";
   const labelCls = "text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block";
 
+  const [coverUrl, setCoverUrl]       = useState(initial.cover);
+  const [uploading, setUploading]     = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setUploadError("");
+    try {
+      const url = await uploadCover(file);
+      setCoverUrl(url);
+    } catch {
+      setUploadError("Gabim gjatë ngarkimit. Provo përsëri.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <form action={onSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -70,10 +100,30 @@ function PostForm({
             </select>
           </div>
         </div>
+
+        {/* Cover photo upload */}
         <div className="md:col-span-2">
-          <label className={labelCls}>Foto Cover (URL ose /hero.jpg)</label>
-          <input name="cover" defaultValue={initial.cover}
-            placeholder="/hero.jpg" className={inputCls} />
+          <label className={labelCls}>Foto Cover</label>
+          <input type="hidden" name="cover" value={coverUrl} />
+          <div className="flex gap-3 items-start">
+            {coverUrl && (
+              <div className="w-24 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={coverUrl} alt="cover" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1">
+              <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border border-dashed border-gray-600 hover:border-green-500 transition-colors text-sm ${uploading ? "opacity-50" : ""}`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span className="text-gray-400">{uploading ? "Duke ngarkuar..." : coverUrl ? "Ndrysho foton" : "Ngarko foto nga PC"}</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} className="hidden" />
+              </label>
+              {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
+              {coverUrl && !uploading && <p className="text-green-400 text-xs mt-1">✓ Foto u ngarkua</p>}
+            </div>
+          </div>
         </div>
         <div className="md:col-span-2">
           <label className={labelCls}>Përmbledhja (excerpt) *</label>

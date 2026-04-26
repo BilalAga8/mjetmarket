@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
 
@@ -49,12 +50,15 @@ export default async function BlogPage() {
           className="group block rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow mb-10"
         >
           <div className="relative h-56 sm:h-72 bg-gray-100 overflow-hidden">
-            <img
+            <Image
               src={featured.cover || "/hero.jpg"}
               alt={featured.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              sizes="(max-width: 768px) 100vw, 1000px"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              priority
             />
-            <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full z-10">
               {featured.category}
             </span>
           </div>
@@ -77,12 +81,14 @@ export default async function BlogPage() {
               className="group flex flex-col rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-white"
             >
               <div className="relative h-44 bg-gray-100 overflow-hidden">
-                <img
+                <Image
                   src={post.cover || "/hero.jpg"}
                   alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 bg-white text-green-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-100">
+                <span className="absolute top-3 left-3 bg-white text-green-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-green-100 z-10">
                   {post.category}
                 </span>
               </div>

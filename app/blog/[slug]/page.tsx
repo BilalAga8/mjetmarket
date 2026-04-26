@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
 
@@ -172,8 +173,15 @@ export default async function BlogPostPage({ params }: Props) {
       </h1>
       <p className="text-xs text-gray-400 mb-6">{formatDate(post.date)} · {post.read_min} min lexim</p>
 
-      <div className="rounded-2xl overflow-hidden mb-8 h-56 sm:h-72 bg-gray-100">
-        <img src={post.cover || "/hero.jpg"} alt={post.title} className="w-full h-full object-cover" />
+      <div className="relative rounded-2xl overflow-hidden mb-8 h-56 sm:h-72 bg-gray-100">
+        <Image
+          src={post.cover || "/hero.jpg"}
+          alt={post.title}
+          fill
+          sizes="(max-width: 768px) 100vw, 768px"
+          className="object-cover"
+          priority
+        />
       </div>
 
       <article>{renderContent(post.content)}</article>
@@ -185,8 +193,8 @@ export default async function BlogPostPage({ params }: Props) {
             {related.map((r) => (
               <Link key={r.slug} href={`/blog/${r.slug}`}
                 className="group flex gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50 transition-colors">
-                <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                  <img src={r.cover || "/hero.jpg"} alt={r.title} className="w-full h-full object-cover" />
+                <div className="relative w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                  <Image src={r.cover || "/hero.jpg"} alt={r.title} fill sizes="64px" className="object-cover" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <p className="text-xs text-green-600 font-semibold mb-0.5">{r.category}</p>
