@@ -29,6 +29,14 @@ export const metadata: Metadata = {
     "makina tirane", "makina durres", "shes makine shqiperi",
   ],
   metadataBase: new URL("https://www.mjetmarket.com"),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   openGraph: {
     title: "MjetMarket — Blen dhe Shit Makina në Shqipëri",
     description: "Platforma kryesore për blerjen dhe shitjen e makinave në Shqipëri.",
