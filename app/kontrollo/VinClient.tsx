@@ -12,9 +12,11 @@ interface VinData {
   engine: string;
   fuel: string;
   transmission: string;
+  transmissionSpeeds: string;
   displacement: string;
   bodyClass: string;
   doors: string;
+  seats: string;
   driveType: string;
   cylinders: string;
   hp: string;
@@ -22,15 +24,15 @@ interface VinData {
   series: string;
   trim: string;
   plantCountry: string;
+  steeringLocation: string;
+  frontTire: string;
 }
 
 interface Recommendations {
   engineOil: { type: string; viscosity: string; liters: number };
-  oilFilter: string;
-  airFilter: string;
-  tireSize: string;
   serviceInterval: string;
   gearboxOil: string;
+  isEstimate: boolean;
 }
 
 const oilMap: Record<string, { viscosity: string; liters: number; type: string }> = {
@@ -50,7 +52,7 @@ const oilMap: Record<string, { viscosity: string; liters: number; type: string }
   "HYUNDAI_benzine":    { viscosity: "5W-20",           liters: 4.0, type: "ACEA A5" },
   "KIA_diesel":         { viscosity: "5W-30",           liters: 4.5, type: "ACEA C3" },
   "KIA_benzine":        { viscosity: "5W-20",           liters: 4.0, type: "ACEA A5" },
-  "DEFAULT":            { viscosity: "5W-40",           liters: 4.5, type: "ACEA A3/B4" },
+  "DEFAULT":            { viscosity: "5W-30",           liters: 4.5, type: "ACEA A3/B4" },
 };
 
 const longIntervalMakes = ["BMW", "MERCEDES", "AUDI", "VOLKSWAGEN"];
@@ -67,11 +69,11 @@ function getRecommendations(make: string, fuel: string, year: number, turbo: str
   const norm = normalizeMake(make);
   const fuelKey = fuel.toLowerCase().includes("diesel") ? "diesel" : "benzine";
   const oilKey = `${norm}_${fuelKey}`;
-  let oil = oilMap[oilKey] || oilMap["DEFAULT"];
+  const isEstimate = !oilMap[oilKey];
+  let oil = oilMap[oilKey] ?? oilMap["DEFAULT"];
 
-  // Turbo kërkon vaj sintetik të plotë me viskozitet më të ulët
   if (turbo.toLowerCase() === "yes" && !oil.viscosity.startsWith("0W")) {
-    oil = { ...oil, viscosity: `0W-${oil.viscosity.split("-")[1] ?? "40"}`, type: oil.type + " (Full Synthetic — Turbo)" };
+    oil = { ...oil, viscosity: `0W-${oil.viscosity.split("-")[1] ?? "30"}`, type: oil.type + " (Full Synthetic — Turbo)" };
   }
 
   const longInterval = longIntervalMakes.includes(norm);
@@ -83,11 +85,9 @@ function getRecommendations(make: string, fuel: string, year: number, turbo: str
 
   return {
     engineOil: { type: oil.type, viscosity: oil.viscosity, liters: oil.liters },
-    oilFilter: `${norm === "DEFAULT" ? "Universal" : norm} OEM`,
-    airFilter: `${norm === "DEFAULT" ? "Universal" : norm} OEM${year > 2010 ? " / Mann Filter" : ""}`,
-    tireSize: "Shih kartonin brenda derës ose dokumenteve",
     serviceInterval: interval,
     gearboxOil,
+    isEstimate,
   };
 }
 
@@ -126,23 +126,27 @@ export default function VinClient({ services }: { services: Service[] }) {
       const json = await res.json();
       const results = json.Results ?? [];
 
-      const make         = getField(results, "Make");
-      const model        = getField(results, "Model");
-      const yearStr      = getField(results, "Model Year");
-      const year         = parseInt(yearStr) || 0;
-      const engine       = getField(results, "Engine Configuration");
-      const fuel         = getField(results, "Fuel Type - Primary") || "Benzinë";
-      const transmission = getField(results, "Transmission Style");
-      const displacement = getField(results, "Displacement (L)");
-      const bodyClass    = getField(results, "Body Class");
-      const doors        = getField(results, "Number of Doors");
-      const driveType    = getField(results, "Drive Type");
-      const cylinders    = getField(results, "Engine Number of Cylinders");
-      const hp           = getField(results, "Engine Brake (hp) From");
-      const turbo        = getField(results, "Turbo");
-      const series       = getField(results, "Series");
-      const trim         = getField(results, "Trim");
-      const plantCountry = getField(results, "Plant Country");
+      const make               = getField(results, "Make");
+      const model              = getField(results, "Model");
+      const yearStr            = getField(results, "Model Year");
+      const year               = parseInt(yearStr) || 0;
+      const engine             = getField(results, "Engine Configuration");
+      const fuel               = getField(results, "Fuel Type - Primary") || "Benzinë";
+      const transmission       = getField(results, "Transmission Style");
+      const transmissionSpeeds = getField(results, "Transmission Speeds");
+      const displacement       = getField(results, "Displacement (L)");
+      const bodyClass          = getField(results, "Body Class");
+      const doors              = getField(results, "Number of Doors");
+      const seats              = getField(results, "Number of Seats");
+      const driveType          = getField(results, "Drive Type");
+      const cylinders          = getField(results, "Engine Number of Cylinders");
+      const hp                 = getField(results, "Engine Brake (hp) From");
+      const turbo              = getField(results, "Turbo");
+      const series             = getField(results, "Series");
+      const trim               = getField(results, "Trim");
+      const plantCountry       = getField(results, "Plant Country");
+      const steeringLocation   = getField(results, "Steering Location");
+      const frontTire          = getField(results, "Front Tire");
 
       if (!make || !model || !year) {
         setError("VIN-i nuk u njoh. Kontrollo nëse e ke shtypur saktë ose plotëso të dhënat manualisht.");
@@ -152,8 +156,9 @@ export default function VinClient({ services }: { services: Service[] }) {
       }
 
       const data: VinData = {
-        make, model, year, engine, fuel, transmission, displacement,
-        bodyClass, doors, driveType, cylinders, hp, turbo, series, trim, plantCountry,
+        make, model, year, engine, fuel, transmission, transmissionSpeeds,
+        displacement, bodyClass, doors, seats, driveType, cylinders,
+        hp, turbo, series, trim, plantCountry, steeringLocation, frontTire,
       };
       setVinData(data);
       setRecs(getRecommendations(make, fuel, year, turbo));
@@ -170,9 +175,10 @@ export default function VinClient({ services }: { services: Service[] }) {
     const data: VinData = {
       make: manual.make, model: manual.model, year,
       engine: "", fuel: manual.fuel === "diesel" ? "Diesel" : "Benzinë",
-      transmission: "", displacement: "",
-      bodyClass: "", doors: "", driveType: "", cylinders: "",
+      transmission: "", transmissionSpeeds: "", displacement: "",
+      bodyClass: "", doors: "", seats: "", driveType: "", cylinders: "",
       hp: "", turbo: "", series: "", trim: "", plantCountry: "",
+      steeringLocation: "", frontTire: "",
     };
     setVinData(data);
     setRecs(getRecommendations(manual.make, manual.fuel, year, ""));
@@ -308,20 +314,24 @@ export default function VinClient({ services }: { services: Service[] }) {
                   ["Marka", vinData.make],
                   ["Modeli", vinData.model],
                   ["Viti", vinData.year],
-                  ["Lloji", vinData.bodyClass || "—"],
-                  ["Dyert", vinData.doors || "—"],
-                  ["Traksi", vinData.driveType || "—"],
-                  ["Karburanti", vinData.fuel || "—"],
-                  ["Cilindrata", vinData.displacement ? `${vinData.displacement}L` : "—"],
-                  ["Cilindra", vinData.cylinders || "—"],
-                  ["Fuqia", vinData.hp ? `${vinData.hp} HP` : "—"],
-                  ["Turbo", vinData.turbo === "Yes" ? "✓ Po" : vinData.turbo === "No" ? "Jo" : "—"],
-                  ["Kambja", vinData.transmission || "—"],
-                  ["Motori", vinData.engine || "—"],
-                  ["Seria", vinData.series || "—"],
-                  ["Trim", vinData.trim || "—"],
-                  ["Vendi prodhimit", vinData.plantCountry || "—"],
-                ] as [string, string | number][]).filter(([, v]) => v && v !== "—").map(([label, value]) => (
+                  ["Lloji", vinData.bodyClass],
+                  ["Karburanti", vinData.fuel],
+                  ["Cilindrata", vinData.displacement ? `${vinData.displacement}L` : ""],
+                  ["Cilindra", vinData.cylinders],
+                  ["Fuqia", vinData.hp ? `${vinData.hp} HP` : ""],
+                  ["Turbo", vinData.turbo === "Yes" ? "✓ Po" : vinData.turbo === "No" ? "Jo" : ""],
+                  ["Kambja", vinData.transmission],
+                  ["Marsheset", vinData.transmissionSpeeds],
+                  ["Traksi", vinData.driveType],
+                  ["Dyert", vinData.doors],
+                  ["Vendet", vinData.seats],
+                  ["Timoni", vinData.steeringLocation],
+                  ["Gomat (para)", vinData.frontTire],
+                  ["Motori", vinData.engine],
+                  ["Seria", vinData.series],
+                  ["Trim", vinData.trim],
+                  ["Vendi prodhimit", vinData.plantCountry],
+                ] as [string, string | number][]).filter(([, v]) => v && String(v).trim() !== "").map(([label, value]) => (
                   <div key={label} className="flex justify-between py-2 text-sm">
                     <span className="text-gray-500">{label}</span>
                     <span className={`font-semibold ${label === "Turbo" && value === "✓ Po" ? "text-orange-500" : "text-gray-900"}`}>
@@ -336,36 +346,27 @@ export default function VinClient({ services }: { services: Service[] }) {
             <div className="flex flex-col gap-3">
               <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Rekomandimet falas</h2>
 
+              {recs.isEstimate && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
+                  <span className="text-xl shrink-0">⚠️</span>
+                  <div>
+                    <p className="text-sm font-bold text-amber-800 mb-1">Vlerësim i përgjithshëm — jo specifik për këtë mjet</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      Marka e kësaj makine nuk gjendet në bazën tonë të të dhënave. Vlerat e vajit janë standarde dhe <strong>mund të mos jenë të sakta</strong> për modelin tuaj.
+                    </p>
+                    <p className="text-xs text-amber-700 mt-2">
+                      Për saktësi, dërgoni numrin e shasisë (<strong>{vin || "VIN"}</strong>) te mekaniku ose dyqani i pjesëve.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
                 <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-lg shrink-0">🛢️</div>
                 <div>
                   <p className="text-xs font-bold text-gray-800">Vaji i motorrit</p>
                   <p className="text-sm text-green-600 font-semibold">{recs.engineOil.viscosity}</p>
                   <p className="text-xs text-gray-500">Spec: {recs.engineOil.type} · {recs.engineOil.liters}L</p>
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
-                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-lg shrink-0">🔩</div>
-                <div>
-                  <p className="text-xs font-bold text-gray-800">Filtri i vajit</p>
-                  <p className="text-sm text-gray-700">{recs.oilFilter}</p>
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
-                <div className="w-9 h-9 bg-sky-50 rounded-xl flex items-center justify-center text-lg shrink-0">💨</div>
-                <div>
-                  <p className="text-xs font-bold text-gray-800">Filtri i ajrit</p>
-                  <p className="text-sm text-gray-700">{recs.airFilter}</p>
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
-                <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-lg shrink-0">🛞</div>
-                <div>
-                  <p className="text-xs font-bold text-gray-800">Kanta e gomave</p>
-                  <p className="text-sm text-gray-500">{recs.tireSize}</p>
                 </div>
               </div>
 
@@ -377,8 +378,87 @@ export default function VinClient({ services }: { services: Service[] }) {
                   <p className="text-xs text-gray-500">Vaji i kambjes: {recs.gearboxOil}</p>
                 </div>
               </div>
+
+              <a
+                href={`/pjese-kembimi?make=${encodeURIComponent(vinData.make)}&model=${encodeURIComponent(vinData.model)}&year=${vinData.year}`}
+                className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start hover:border-green-300 transition-colors group"
+              >
+                <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-lg shrink-0">🔩</div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Filtri i vajit & ajrit</p>
+                  <p className="text-sm text-green-600 font-semibold group-hover:underline">
+                    Kërko pjesë për {vinData.make} {vinData.model} {vinData.year} →
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Numrin e filtrit e gjen sipas motorit tënd</p>
+                </div>
+              </a>
             </div>
           </div>
+
+          {/* Këshilla mirëmbajtjeje sipas karburantit */}
+          {(() => {
+            const isDiesel = vinData.fuel.toLowerCase().includes("diesel");
+            const isGas    = vinData.fuel.toLowerCase().includes("gas") || vinData.fuel.toLowerCase().includes("lpg");
+
+            const tips = isDiesel ? [
+              {
+                icon: "⛽",
+                bg: "bg-blue-50",
+                title: "Nafta e mirë — investim i zgjuar",
+                text: "Përdorni karburant cilësor (V-Power, Ultimate ose ekuivalent). Nafta e dobët dëmton injektorët dhe pompën e karburantit — riparime shumë të kushtueshme.",
+              },
+              {
+                icon: "🔩",
+                bg: "bg-amber-50",
+                title: "Ndërrimi i vajit & filtrave — çdo 10,000 km",
+                text: "Motori diesel punon me presion të lartë. Vaji i ndotur shkakton konsum të akseleruar të motorrit. Mos e shtyni ndërrimin përtej 10,000 km.",
+              },
+              {
+                icon: "❄️",
+                bg: "bg-sky-50",
+                title: "Antifrizi & radiatori — kontroll i rregullt",
+                text: "Kontrolloni rregullisht nivelin e antifrizit dhe gjendjen e radiatorit. Mbinxehja është shkaktarja kryesore e dëmtimeve të mëdha të motorrit diesel.",
+              },
+            ] : [
+              {
+                icon: "🔩",
+                bg: "bg-amber-50",
+                title: "Ndërrimi i vajit & filtrave — 7,000 deri 10,000 km",
+                text: "Motori benzinë kërkon ndërrimin e vajit dhe filtrit të paktën çdo 7,000–10,000 km. Vaji i ndotur shkakton fërkimin e brendshëm dhe dëmton cilindrat.",
+              },
+              {
+                icon: "🕯️",
+                bg: "bg-orange-50",
+                title: "Zëvendësimi i kandellave — para afatit",
+                text: "Kandelet e konsumuara rrisin konsumin e karburantit, shkaktojnë ndezje të rreme (misfire) dhe dëmtojnë katalizatorin. Zëvendëso para afatit të prodhuesit.",
+              },
+              {
+                icon: "⚡",
+                bg: isGas ? "bg-yellow-50" : "bg-purple-50",
+                title: isGas ? "Kontrolli i bobinave — kritik për mjetet me gaz" : "Kontrolli i bobinave",
+                text: isGas
+                  ? "Mjetet me gaz (LPG/CNG) konsumojnë bobinат dhe kandelet më shpejt. Kontrolloni çdo 30,000 km — dështimi i bobinës shkakton dëme të rënda të motorrit."
+                  : "Kontrolloni bobinат dhe kabllot e ndezjes çdo 40,000–60,000 km. Bobina e dëmtuar shkakton humbje fuqie dhe konsum të lartë karburanti.",
+              },
+            ];
+
+            return (
+              <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-6">
+                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                  {isDiesel ? "🛢️ Këshilla për mirëmbajtjen e motorit diesel" : "⛽ Këshilla për mirëmbajtjen e motorit benzinë"}
+                </h2>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {tips.map((tip) => (
+                    <div key={tip.title} className={`${tip.bg} rounded-2xl p-4`}>
+                      <div className="text-2xl mb-2">{tip.icon}</div>
+                      <p className="text-sm font-bold text-gray-900 mb-1">{tip.title}</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{tip.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* CTAs */}
           <div className="grid sm:grid-cols-3 gap-4 mt-8">
