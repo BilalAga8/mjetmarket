@@ -9,9 +9,10 @@ interface Props {
   model: string;
   phone?: string;
   vehicleId?: string;
+  isLoggedIn?: boolean;
 }
 
-export default function ContactButtons({ brand, model, phone = "+355 69 123 4567", vehicleId }: Readonly<Props>) {
+export default function ContactButtons({ brand, model, phone = "+355 69 123 4567", vehicleId, isLoggedIn = false }: Readonly<Props>) {
   const [mode, setMode] = useState<"idle" | "call" | "message">("idle");
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [sending, setSending] = useState(false);
@@ -83,7 +84,7 @@ export default function ContactButtons({ brand, model, phone = "+355 69 123 4567
         >
           Mesazh
         </button>
-        {vehicleId && (
+        {isLoggedIn && vehicleId && (
           <button
             onClick={openChat}
             className="flex-1 border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold py-3 rounded-xl transition-colors duration-200 text-sm"

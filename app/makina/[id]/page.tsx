@@ -31,7 +31,7 @@ import ViewTracker from "../../../components/ViewTracker";
 import LoanCalculator from "../../../components/LoanCalculator";
 import Link from "next/link";
 
-export const revalidate = 0;
+export const revalidate = 3600;
 
 export default async function CarPage({
   params,
@@ -136,14 +136,16 @@ export default async function CarPage({
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} />
-                <AppointmentModal
-                  vehicleId={car.id}
-                  brand={car.brand}
-                  model={car.model}
-                  year={car.year}
-                  services={servicesData ?? []}
-                />
+                <ContactButtons brand={car.brand} model={car.model} vehicleId={car.id} isLoggedIn={!!user} />
+                {user && (
+                  <AppointmentModal
+                    vehicleId={car.id}
+                    brand={car.brand}
+                    model={car.model}
+                    year={car.year}
+                    services={servicesData ?? []}
+                  />
+                )}
               </div>
             )}
           </div>

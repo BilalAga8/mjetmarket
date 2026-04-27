@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { albanianCities } from "../../../data/cities";
+import BrandModelSelect from "@/components/BrandModelSelect";
 
 const vehicleCategories: string[] = ["Makinë", "Kamion", "Motor", "Varkë", "Trailer", "Tjetër"];
 
@@ -160,14 +161,15 @@ export default function ShtoMjetPage() {
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <h2 className="text-sm font-bold text-gray-900 mb-4">Informacioni Bazë</h2>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="brand" className={labelClass}>Marka *</label>
-              <input id="brand" name="brand" value={form.brand} onChange={onChange} placeholder="p.sh. BMW" className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="model" className={labelClass}>Modeli *</label>
-              <input id="model" name="model" value={form.model} onChange={onChange} placeholder="p.sh. 320d" className={inputClass} />
-            </div>
+            <BrandModelSelect
+              brand={form.brand}
+              model={form.model}
+              onBrandChange={(v) => setForm((p) => ({ ...p, brand: v, model: "" }))}
+              onModelChange={(v) => setForm((p) => ({ ...p, model: v }))}
+              selectClass={selectClass}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
             <div>
               <label htmlFor="year" className={labelClass}>Viti *</label>
               <input id="year" name="year" type="number" value={form.year} onChange={onChange} placeholder="p.sh. 2020" min="1950" max="2027" className={inputClass} />

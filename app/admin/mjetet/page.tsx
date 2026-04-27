@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 const supabase = createClient();
 import { albanianCities } from "../../../data/cities";
+import BrandModelSelect from "@/components/BrandModelSelect";
 
 interface Vehicle {
   id: string;
@@ -197,15 +198,15 @@ export default function AdminMjetet() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Marka", name: "brand", placeholder: "BMW" },
-                  { label: "Modeli", name: "model", placeholder: "320d" },
-                ].map((f) => (
-                  <div key={f.name}>
-                    <label className={labelClass}>{f.label}</label>
-                    <input name={f.name} value={(form as Record<string, unknown>)[f.name] as string} onChange={onChange} placeholder={f.placeholder} className={inputClass} />
-                  </div>
-                ))}
+                <BrandModelSelect
+                  brand={form.brand}
+                  model={form.model}
+                  onBrandChange={(v) => setForm((p) => ({ ...p, brand: v, model: "" }))}
+                  onModelChange={(v) => setForm((p) => ({ ...p, model: v }))}
+                  selectClass={inputClass}
+                  inputClass={inputClass}
+                  labelClass={labelClass}
+                />
                 {/* Viti — dropdown */}
                 <div>
                   <label className={labelClass}>Viti i Prodhimit</label>
