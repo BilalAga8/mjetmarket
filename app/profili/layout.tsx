@@ -4,23 +4,27 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
+import { useLanguage } from "@/lib/lang";
 
 type Profile = { emri: string; mbiemri: string; email: string };
-
-const navItems = [
-  { href: "/profili",             label: "Paneli",      icon: "📊", exact: true },
-  { href: "/profili/njoftimet",   label: "Njoftimet",   icon: "🚗" },
-  { href: "/profili/mesazhet",    label: "Mesazhet",    icon: "✉️" },
-  { href: "/profili/shto-mjet",   label: "Shto",        icon: "➕" },
-  { href: "/profili/statistikat", label: "Statistikat", icon: "📈" },
-  { href: "/profili/cilesimet",   label: "Cilësimet",   icon: "⚙️" },
-];
 
 export default function ProfiliLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unread, setUnread] = useState(0);
+  const { lang, setLang, t } = useLanguage();
+  const tp = t.profili;
+
+  const navItems = [
+    { href: "/profili",             label: tp.panel,    icon: "📊", exact: true },
+    { href: "/profili/njoftimet",   label: tp.listings, icon: "🚗" },
+    { href: "/profili/libri",       label: tp.logbook,  icon: "📓" },
+    { href: "/profili/mesazhet",    label: tp.messages, icon: "✉️" },
+    { href: "/profili/shto-mjet",   label: tp.add,      icon: "➕" },
+    { href: "/profili/statistikat", label: tp.stats,    icon: "📈" },
+    { href: "/profili/cilesimet",   label: tp.settings, icon: "⚙️" },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -62,7 +66,7 @@ export default function ProfiliLayout({ children }: Readonly<{ children: React.R
               Mjet<span className="text-green-500">Market</span>
             </span>
           </Link>
-          <p className="text-xs text-gray-400 mt-1 ml-10">Paneli im</p>
+          <p className="text-xs text-gray-400 mt-1 ml-10">{tp.panel}</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
@@ -95,9 +99,19 @@ export default function ProfiliLayout({ children }: Readonly<{ children: React.R
               <p className="text-xs text-gray-400 truncate">{profile.email}</p>
             </div>
           </div>
+          <div className="flex items-center justify-between px-3 py-2 mb-1">
+            <button
+              onClick={() => setLang(lang === "sq" ? "en" : "sq")}
+              className="text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <span className={lang === "sq" ? "text-green-600" : ""}>SQ</span>
+              <span className="mx-0.5">/</span>
+              <span className={lang === "en" ? "text-green-600" : ""}>EN</span>
+            </button>
+          </div>
           <button onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors duration-150">
-            <span>🚪</span> Dil nga llogaria
+            <span>🚪</span> {tp.logout}
           </button>
         </div>
       </aside>
@@ -119,7 +133,15 @@ export default function ProfiliLayout({ children }: Readonly<{ children: React.R
           <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-sm font-bold">
             {profile.emri?.[0]?.toUpperCase() ?? "U"}
           </div>
-          <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 transition-colors px-2">Dil</button>
+          <button
+            onClick={() => setLang(lang === "sq" ? "en" : "sq")}
+            className="text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <span className={lang === "sq" ? "text-green-600" : ""}>SQ</span>
+            <span className="mx-0.5">/</span>
+            <span className={lang === "en" ? "text-green-600" : ""}>EN</span>
+          </button>
+          <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 transition-colors px-2">{tp.logout}</button>
         </div>
       </div>
 

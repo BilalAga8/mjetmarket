@@ -2,36 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/lang";
 
 interface Service { id: number; name: string; city: string; phone: string; }
 
 interface VinData {
-  make: string;
-  model: string;
-  year: number;
-  engine: string;
-  fuel: string;
-  transmission: string;
-  transmissionSpeeds: string;
-  displacement: string;
-  bodyClass: string;
-  doors: string;
-  seats: string;
-  driveType: string;
-  cylinders: string;
-  hp: string;
-  turbo: string;
-  series: string;
-  trim: string;
-  plantCountry: string;
-  steeringLocation: string;
-  frontTire: string;
+  make: string; model: string; year: number; engine: string; fuel: string;
+  transmission: string; transmissionSpeeds: string; displacement: string;
+  bodyClass: string; doors: string; seats: string; driveType: string;
+  cylinders: string; hp: string; turbo: string; series: string; trim: string;
+  plantCountry: string; steeringLocation: string; frontTire: string;
 }
 
 interface Recommendations {
   engineOil: { type: string; viscosity: string; liters: number };
-  serviceInterval: string;
-  gearboxOil: string;
+  serviceInterval: "15" | "10";
+  gearboxOil: "diesel" | "petrol";
   isEstimate: boolean;
 }
 
@@ -65,7 +51,7 @@ function normalizeMake(make: string): string {
   return m.split("-")[0].split(" ")[0];
 }
 
-function getRecommendations(make: string, fuel: string, year: number, turbo: string): Recommendations {
+function getRecommendations(make: string, fuel: string, turbo: string): Recommendations {
   const norm = normalizeMake(make);
   const fuelKey = fuel.toLowerCase().includes("diesel") ? "diesel" : "benzine";
   const oilKey = `${norm}_${fuelKey}`;
@@ -76,17 +62,10 @@ function getRecommendations(make: string, fuel: string, year: number, turbo: str
     oil = { ...oil, viscosity: `0W-${oil.viscosity.split("-")[1] ?? "30"}`, type: oil.type + " (Full Synthetic — Turbo)" };
   }
 
-  const longInterval = longIntervalMakes.includes(norm);
-  const interval = longInterval ? "Çdo 15,000 km ose 1 vit" : "Çdo 10,000 km ose 1 vit";
-
-  const gearboxOil = fuelKey === "diesel"
-    ? "75W-90 GL-4 (ndërrimi çdo 60,000 km)"
-    : "ATF Dexron VI ose MTF 75W-80 GL-4";
-
   return {
     engineOil: { type: oil.type, viscosity: oil.viscosity, liters: oil.liters },
-    serviceInterval: interval,
-    gearboxOil,
+    serviceInterval: longIntervalMakes.includes(norm) ? "15" : "10",
+    gearboxOil: fuelKey === "diesel" ? "diesel" : "petrol",
     isEstimate,
   };
 }
@@ -96,6 +75,9 @@ function getField(results: { Variable: string; Value: string | null }[], variabl
 }
 
 export default function VinClient({ services }: { services: Service[] }) {
+  const { t } = useLanguage();
+  const tv = t.vin;
+
   const [vin, setVin] = useState("");
   const [vinData, setVinData] = useState<VinData | null>(null);
   const [recs, setRecs] = useState<Recommendations | null>(null);
@@ -103,29 +85,17 @@ export default function VinClient({ services }: { services: Service[] }) {
   const [error, setError] = useState("");
   const [showServices, setShowServices] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // Manual fallback state
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ make: "", model: "", year: "", fuel: "benzine" });
 
   async function handleCheck() {
     const v = vin.trim().toUpperCase();
-    if (v.length !== 17) {
-      setError("VIN-i duhet të ketë saktësisht 17 karaktere.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    setVinData(null);
-    setRecs(null);
-
+    if (v.length !== 17) { setError(tv.errorLength); return; }
+    setError(""); setLoading(true); setVinData(null); setRecs(null);
     try {
-      const res = await fetch(
-        `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${v}?format=json`
-      );
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${v}?format=json`);
       const json = await res.json();
       const results = json.Results ?? [];
-
       const make               = getField(results, "Make");
       const model              = getField(results, "Model");
       const yearStr            = getField(results, "Model Year");
@@ -147,29 +117,24 @@ export default function VinClient({ services }: { services: Service[] }) {
       const plantCountry       = getField(results, "Plant Country");
       const steeringLocation   = getField(results, "Steering Location");
       const frontTire          = getField(results, "Front Tire");
-
       if (!make || !model || !year) {
-        setError("VIN-i nuk u njoh. Kontrollo nëse e ke shtypur saktë ose plotëso të dhënat manualisht.");
-        setShowManual(true);
-        setLoading(false);
-        return;
+        setError(tv.errorNotFound); setShowManual(true); setLoading(false); return;
       }
-
       const data: VinData = {
         make, model, year, engine, fuel, transmission, transmissionSpeeds,
         displacement, bodyClass, doors, seats, driveType, cylinders,
         hp, turbo, series, trim, plantCountry, steeringLocation, frontTire,
       };
       setVinData(data);
-      setRecs(getRecommendations(make, fuel, year, turbo));
+      setRecs(getRecommendations(make, fuel, turbo));
     } catch {
-      setError("Gabim gjatë lidhjes me server-in. Provo përsëri.");
+      setError(tv.errorNetwork);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleManualSubmit(e: React.FormEvent) {
+  function handleManualSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const year = parseInt(manual.year) || new Date().getFullYear();
     const data: VinData = {
@@ -181,16 +146,15 @@ export default function VinClient({ services }: { services: Service[] }) {
       steeringLocation: "", frontTire: "",
     };
     setVinData(data);
-    setRecs(getRecommendations(manual.make, manual.fuel, year, ""));
-    setShowManual(false);
-    setError("");
+    setRecs(getRecommendations(manual.make, manual.fuel, ""));
+    setShowManual(false); setError("");
   }
 
   function handleShare() {
     if (!vinData) return;
     const url = `${window.location.origin}/kontrollo?vin=${vin}`;
     if (navigator.share) {
-      navigator.share({ title: `${vinData.make} ${vinData.model} — Raport VIN`, url });
+      navigator.share({ title: `${vinData.make} ${vinData.model} — VIN Report`, url });
     } else {
       navigator.clipboard.writeText(url);
       setCopied(true);
@@ -206,35 +170,29 @@ export default function VinClient({ services }: { services: Service[] }) {
       <div className="bg-white border-b border-gray-200 py-14 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-block bg-green-50 text-green-600 text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
-            Falas — pa regjistrim
+            {tv.badge}
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
-            Kontrollo Makinën Tënde
-          </h1>
-          <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto">
-            Fut numrin e shasisë dhe merr rekomandimet e plota të servisit, pa pagesë.
-          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">{tv.title}</h1>
+          <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto">{tv.subtitle}</p>
 
-          <div className="flex gap-2 max-w-lg mx-auto">
+          <div className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto">
             <input
               value={vin}
               onChange={(e) => setVin(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleCheck()}
-              placeholder="p.sh. WBA3A5G5XDNN12345"
+              placeholder={tv.placeholder}
               maxLength={17}
               className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
             />
             <button
               onClick={handleCheck}
               disabled={loading}
-              className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm whitespace-nowrap"
+              className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
             >
-              {loading ? "Duke kontrolluar..." : "Kontrollo"}
+              {loading ? tv.checking : tv.checkBtn}
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            Gjendet në kartën gri të regjistrimit ose brenda derës së shoferit
-          </p>
+          <p className="text-xs text-gray-400 mt-2">{tv.vinHint}</p>
 
           {error && (
             <div className="mt-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3 text-left">
@@ -244,43 +202,39 @@ export default function VinClient({ services }: { services: Service[] }) {
         </div>
       </div>
 
-      {/* Manual fallback form */}
+      {/* Manual fallback */}
       {showManual && (
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h2 className="font-bold text-gray-900 mb-4">Plotëso të dhënat manualisht</h2>
+            <h2 className="font-bold text-gray-900 mb-4">{tv.manualTitle}</h2>
             <form onSubmit={handleManualSubmit} className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Marka *</label>
-                <input required value={manual.make} onChange={(e) => setManual(p => ({ ...p, make: e.target.value }))}
-                  placeholder="BMW" className={inputCls} />
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{tv.brand} *</label>
+                <input required value={manual.make} onChange={(e) => setManual(p => ({ ...p, make: e.target.value }))} placeholder="BMW" className={inputCls} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Modeli *</label>
-                <input required value={manual.model} onChange={(e) => setManual(p => ({ ...p, model: e.target.value }))}
-                  placeholder="320d" className={inputCls} />
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{tv.model} *</label>
+                <input required value={manual.model} onChange={(e) => setManual(p => ({ ...p, model: e.target.value }))} placeholder="320d" className={inputCls} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Viti *</label>
-                <input required value={manual.year} onChange={(e) => setManual(p => ({ ...p, year: e.target.value }))}
-                  placeholder="2015" maxLength={4} className={inputCls} />
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{tv.year} *</label>
+                <input required value={manual.year} onChange={(e) => setManual(p => ({ ...p, year: e.target.value }))} placeholder="2015" maxLength={4} className={inputCls} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Karburanti *</label>
-                <select value={manual.fuel} onChange={(e) => setManual(p => ({ ...p, fuel: e.target.value }))}
-                  className={inputCls}>
-                  <option value="benzine">Benzinë</option>
-                  <option value="diesel">Diesel</option>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">{tv.fuelType} *</label>
+                <select value={manual.fuel} onChange={(e) => setManual(p => ({ ...p, fuel: e.target.value }))} className={inputCls}>
+                  <option value="benzine">{tv.petrol}</option>
+                  <option value="diesel">{tv.diesel}</option>
                 </select>
               </div>
               <div className="col-span-2 flex gap-3">
                 <button type="button" onClick={() => setShowManual(false)}
                   className="flex-1 border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                  Anulo
+                  {tv.cancel}
                 </button>
                 <button type="submit"
                   className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
-                  Merr Rekomandimet
+                  {tv.getRecs}
                 </button>
               </div>
             </form>
@@ -291,7 +245,6 @@ export default function VinClient({ services }: { services: Service[] }) {
       {/* Results */}
       {vinData && recs && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-          {/* Vehicle badge */}
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -302,39 +255,39 @@ export default function VinClient({ services }: { services: Service[] }) {
             </div>
             <span className="font-extrabold text-gray-900">{vinData.make} {vinData.model}</span>
             <span className="text-sm text-gray-500">{vinData.year}</span>
-            <span className="ml-auto text-xs text-gray-400 font-mono">{vin || "manual"}</span>
+            <span className="ml-auto text-xs text-gray-400 font-mono">{vin || tv.manual}</span>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Vehicle data */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
-              <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">Të dhënat e mjetit</h2>
+              <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide mb-4">{tv.vehicleData}</h2>
               <div className="divide-y divide-gray-50">
                 {([
-                  ["Marka", vinData.make],
-                  ["Modeli", vinData.model],
-                  ["Viti", vinData.year],
-                  ["Lloji", vinData.bodyClass],
-                  ["Karburanti", vinData.fuel],
-                  ["Cilindrata", vinData.displacement ? `${vinData.displacement}L` : ""],
-                  ["Cilindra", vinData.cylinders],
-                  ["Fuqia", vinData.hp ? `${vinData.hp} HP` : ""],
-                  ["Turbo", vinData.turbo === "Yes" ? "✓ Po" : vinData.turbo === "No" ? "Jo" : ""],
-                  ["Kambja", vinData.transmission],
-                  ["Marsheset", vinData.transmissionSpeeds],
-                  ["Traksi", vinData.driveType],
-                  ["Dyert", vinData.doors],
-                  ["Vendet", vinData.seats],
-                  ["Timoni", vinData.steeringLocation],
-                  ["Gomat (para)", vinData.frontTire],
-                  ["Motori", vinData.engine],
-                  ["Seria", vinData.series],
-                  ["Trim", vinData.trim],
-                  ["Vendi prodhimit", vinData.plantCountry],
+                  [tv.vehicleLabels.make,        vinData.make],
+                  [tv.vehicleLabels.model,       vinData.model],
+                  [tv.vehicleLabels.year,        vinData.year],
+                  [tv.vehicleLabels.body,        vinData.bodyClass],
+                  [tv.vehicleLabels.fuel,        vinData.fuel],
+                  [tv.vehicleLabels.displacement,vinData.displacement ? `${vinData.displacement}L` : ""],
+                  [tv.vehicleLabels.cylinders,   vinData.cylinders],
+                  [tv.vehicleLabels.power,       vinData.hp ? `${vinData.hp} HP` : ""],
+                  [tv.vehicleLabels.turbo,       vinData.turbo === "Yes" ? tv.turboYes : vinData.turbo === "No" ? tv.turboNo : ""],
+                  [tv.vehicleLabels.transmission,vinData.transmission],
+                  [tv.vehicleLabels.speeds,      vinData.transmissionSpeeds],
+                  [tv.vehicleLabels.drive,       vinData.driveType],
+                  [tv.vehicleLabels.doors,       vinData.doors],
+                  [tv.vehicleLabels.seats,       vinData.seats],
+                  [tv.vehicleLabels.steering,    vinData.steeringLocation],
+                  [tv.vehicleLabels.frontTire,   vinData.frontTire],
+                  [tv.vehicleLabels.engine,      vinData.engine],
+                  [tv.vehicleLabels.series,      vinData.series],
+                  [tv.vehicleLabels.trim,        vinData.trim],
+                  [tv.vehicleLabels.plant,       vinData.plantCountry],
                 ] as [string, string | number][]).filter(([, v]) => v && String(v).trim() !== "").map(([label, value]) => (
                   <div key={label} className="flex justify-between py-2 text-sm">
                     <span className="text-gray-500">{label}</span>
-                    <span className={`font-semibold ${label === "Turbo" && value === "✓ Po" ? "text-orange-500" : "text-gray-900"}`}>
+                    <span className={`font-semibold ${label === tv.vehicleLabels.turbo && value === tv.turboYes ? "text-orange-500" : "text-gray-900"}`}>
                       {value}
                     </span>
                   </div>
@@ -344,18 +297,16 @@ export default function VinClient({ services }: { services: Service[] }) {
 
             {/* Recommendations */}
             <div className="flex flex-col gap-3">
-              <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Rekomandimet falas</h2>
+              <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">{tv.freeRecs}</h2>
 
               {recs.isEstimate && (
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
                   <span className="text-xl shrink-0">⚠️</span>
                   <div>
-                    <p className="text-sm font-bold text-amber-800 mb-1">Vlerësim i përgjithshëm — jo specifik për këtë mjet</p>
-                    <p className="text-xs text-amber-700 leading-relaxed">
-                      Marka e kësaj makine nuk gjendet në bazën tonë të të dhënave. Vlerat e vajit janë standarde dhe <strong>mund të mos jenë të sakta</strong> për modelin tuaj.
-                    </p>
+                    <p className="text-sm font-bold text-amber-800 mb-1">{tv.estimateTitle}</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">{tv.estimateBody}</p>
                     <p className="text-xs text-amber-700 mt-2">
-                      Për saktësi, dërgoni numrin e shasisë (<strong>{vin || "VIN"}</strong>) te mekaniku ose dyqani i pjesëve.
+                      {tv.estimateTip} (<strong>{vin || "VIN"}</strong>)
                     </p>
                   </div>
                 </div>
@@ -364,7 +315,7 @@ export default function VinClient({ services }: { services: Service[] }) {
               <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
                 <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-lg shrink-0">🛢️</div>
                 <div>
-                  <p className="text-xs font-bold text-gray-800">Vaji i motorrit</p>
+                  <p className="text-xs font-bold text-gray-800">{tv.engineOil}</p>
                   <p className="text-sm text-green-600 font-semibold">{recs.engineOil.viscosity}</p>
                   <p className="text-xs text-gray-500">Spec: {recs.engineOil.type} · {recs.engineOil.liters}L</p>
                 </div>
@@ -373,9 +324,11 @@ export default function VinClient({ services }: { services: Service[] }) {
               <div className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-3 items-start">
                 <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-lg shrink-0">📅</div>
                 <div>
-                  <p className="text-xs font-bold text-gray-800">Intervali i servisit</p>
-                  <p className="text-sm text-green-600 font-semibold">{recs.serviceInterval}</p>
-                  <p className="text-xs text-gray-500">Vaji i kambjes: {recs.gearboxOil}</p>
+                  <p className="text-xs font-bold text-gray-800">{tv.serviceInterval}</p>
+                  <p className="text-sm text-green-600 font-semibold">
+                    {recs.serviceInterval === "15" ? tv.interval15 : tv.interval10}
+                  </p>
+                  <p className="text-xs text-gray-500">{tv.gearboxOil}: {recs.gearboxOil === "diesel" ? tv.gearboxDiesel : tv.gearboxPetrol}</p>
                 </div>
               </div>
 
@@ -385,67 +338,27 @@ export default function VinClient({ services }: { services: Service[] }) {
               >
                 <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center text-lg shrink-0">🔩</div>
                 <div>
-                  <p className="text-xs font-bold text-gray-800">Filtri i vajit & ajrit</p>
+                  <p className="text-xs font-bold text-gray-800">Filter & Air Filter</p>
                   <p className="text-sm text-green-600 font-semibold group-hover:underline">
-                    Kërko pjesë për {vinData.make} {vinData.model} {vinData.year} →
+                    {tv.filteredFor} {vinData.make} {vinData.model} {vinData.year} →
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Numrin e filtrit e gjen sipas motorit tënd</p>
                 </div>
               </a>
             </div>
           </div>
 
-          {/* Këshilla mirëmbajtjeje sipas karburantit */}
+          {/* Maintenance tips */}
           {(() => {
             const isDiesel = vinData.fuel.toLowerCase().includes("diesel");
             const isGas    = vinData.fuel.toLowerCase().includes("gas") || vinData.fuel.toLowerCase().includes("lpg");
-
-            const tips = isDiesel ? [
-              {
-                icon: "⛽",
-                bg: "bg-blue-50",
-                title: "Nafta e mirë — investim i zgjuar",
-                text: "Përdorni karburant cilësor (V-Power, Ultimate ose ekuivalent). Nafta e dobët dëmton injektorët dhe pompën e karburantit — riparime shumë të kushtueshme.",
-              },
-              {
-                icon: "🔩",
-                bg: "bg-amber-50",
-                title: "Ndërrimi i vajit & filtrave — çdo 10,000 km",
-                text: "Motori diesel punon me presion të lartë. Vaji i ndotur shkakton konsum të akseleruar të motorrit. Mos e shtyni ndërrimin përtej 10,000 km.",
-              },
-              {
-                icon: "❄️",
-                bg: "bg-sky-50",
-                title: "Antifrizi & radiatori — kontroll i rregullt",
-                text: "Kontrolloni rregullisht nivelin e antifrizit dhe gjendjen e radiatorit. Mbinxehja është shkaktarja kryesore e dëmtimeve të mëdha të motorrit diesel.",
-              },
-            ] : [
-              {
-                icon: "🔩",
-                bg: "bg-amber-50",
-                title: "Ndërrimi i vajit & filtrave — 7,000 deri 10,000 km",
-                text: "Motori benzinë kërkon ndërrimin e vajit dhe filtrit të paktën çdo 7,000–10,000 km. Vaji i ndotur shkakton fërkimin e brendshëm dhe dëmton cilindrat.",
-              },
-              {
-                icon: "🕯️",
-                bg: "bg-orange-50",
-                title: "Zëvendësimi i kandellave — para afatit",
-                text: "Kandelet e konsumuara rrisin konsumin e karburantit, shkaktojnë ndezje të rreme (misfire) dhe dëmtojnë katalizatorin. Zëvendëso para afatit të prodhuesit.",
-              },
-              {
-                icon: "⚡",
-                bg: isGas ? "bg-yellow-50" : "bg-purple-50",
-                title: isGas ? "Kontrolli i bobinave — kritik për mjetet me gaz" : "Kontrolli i bobinave",
-                text: isGas
-                  ? "Mjetet me gaz (LPG/CNG) konsumojnë bobinат dhe kandelet më shpejt. Kontrolloni çdo 30,000 km — dështimi i bobinës shkakton dëme të rënda të motorrit."
-                  : "Kontrolloni bobinат dhe kabllot e ndezjes çdo 40,000–60,000 km. Bobina e dëmtuar shkakton humbje fuqie dhe konsum të lartë karburanti.",
-              },
-            ];
+            const tips = isDiesel
+              ? tv.dieselTips
+              : [...tv.petrolTips, isGas ? tv.gasTip : tv.coilTip];
 
             return (
               <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-6">
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-                  {isDiesel ? "🛢️ Këshilla për mirëmbajtjen e motorit diesel" : "⛽ Këshilla për mirëmbajtjen e motorit benzinë"}
+                  {isDiesel ? tv.dieselTipsTitle : tv.petrolTipsTitle}
                 </h2>
                 <div className="grid sm:grid-cols-3 gap-4">
                   {tips.map((tip) => (
@@ -470,8 +383,8 @@ export default function VinClient({ services }: { services: Service[] }) {
                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
-              <span className="font-bold text-sm">Porosit Pjesë</span>
-              <span className="text-xs text-green-100">Filtruara për {vinData.make} {vinData.model}</span>
+              <span className="font-bold text-sm">{tv.orderParts}</span>
+              <span className="text-xs text-green-100">{tv.filteredFor} {vinData.make} {vinData.model}</span>
             </Link>
 
             <button
@@ -481,8 +394,8 @@ export default function VinClient({ services }: { services: Service[] }) {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
               </svg>
-              <span className="font-bold text-sm text-gray-900">Gjej Servis</span>
-              <span className="text-xs text-gray-400">Servis pranë teje</span>
+              <span className="font-bold text-sm text-gray-900">{tv.findService}</span>
+              <span className="text-xs text-gray-400">{tv.serviceNearYou}</span>
             </button>
 
             <button
@@ -493,19 +406,17 @@ export default function VinClient({ services }: { services: Service[] }) {
                 <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
               </svg>
-              <span className="font-bold text-sm text-gray-900">
-                {copied ? "U kopjua!" : "Shpërnda Raportin"}
-              </span>
-              <span className="text-xs text-gray-400">Kopjo link-un</span>
+              <span className="font-bold text-sm text-gray-900">{copied ? tv.copied : tv.shareReport}</span>
+              <span className="text-xs text-gray-400">{tv.copyLink}</span>
             </button>
           </div>
 
           {/* Services list */}
           {showServices && (
             <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Servise të besuara</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">{tv.trustedServices}</p>
               {services.length === 0 ? (
-                <p className="text-sm text-gray-400">Nuk ka servise të listuara akoma.</p>
+                <p className="text-sm text-gray-400">{tv.noServices}</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-3">
                   {services.map((s) => (
@@ -516,7 +427,7 @@ export default function VinClient({ services }: { services: Service[] }) {
                       </div>
                       <a href={`tel:${s.phone.replace(/\s/g, "")}`}
                         className="text-xs bg-green-50 text-green-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors shrink-0">
-                        Telefono
+                        {tv.call}
                       </a>
                     </div>
                   ))}
@@ -530,7 +441,7 @@ export default function VinClient({ services }: { services: Service[] }) {
       {/* Empty state */}
       {!vinData && !loading && !showManual && !error && (
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
-          <p className="text-gray-400 text-sm">Fut VIN-in e makinës tënde dhe kliko "Kontrollo" për të parë rekomandimet.</p>
+          <p className="text-gray-400 text-sm">{tv.emptyState}</p>
         </div>
       )}
     </main>

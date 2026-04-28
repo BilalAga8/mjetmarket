@@ -187,7 +187,7 @@ export default function PjeseKembimiClient({ categories, services = [], products
           {/* VIN Bar */}
           {!vinConfirmed ? (
             <div className="max-w-2xl">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   value={vinInput}
                   onChange={(e) => setVinInput(e.target.value.toUpperCase())}
@@ -199,7 +199,7 @@ export default function PjeseKembimiClient({ categories, services = [], products
                 <button
                   onClick={handleVinCheck}
                   disabled={vinLoading}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
+                  className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                 >
                   {vinLoading ? "..." : "Kontrollo makinën time"}
                 </button>

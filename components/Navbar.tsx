@@ -5,22 +5,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
-
-const links = [
-  { href: "/", label: "Kreu" },
-  { href: "/kerko", label: "Kërko Makina" },
-  { href: "/pjese-kembimi", label: "Pjesë & Servise" },
-  { href: "/kontrollo", label: "Kontrollo VIN" },
-  { href: "/blog", label: "Blog" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/kontakti", label: "Kontakt" },
-];
+import { useLanguage } from "@/lib/lang";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, setLang, t } = useLanguage();
+
+  const links = [
+    { href: "/",             label: t.nav.home },
+    { href: "/kerko",        label: t.nav.search },
+    { href: "/pjese-kembimi",label: t.nav.parts },
+    { href: "/kontrollo",    label: t.nav.vin },
+    { href: "/blog",         label: t.nav.blog },
+    { href: "/faq",          label: t.nav.faq },
+    { href: "/kontakti",     label: t.nav.contact },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -70,18 +72,28 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3 shrink-0">
+          {/* SQ / EN toggle */}
+          <button
+            onClick={() => setLang(lang === "sq" ? "en" : "sq")}
+            className="hidden md:flex items-center text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors gap-0.5"
+          >
+            <span className={lang === "sq" ? "text-green-600" : ""}>SQ</span>
+            <span className="mx-0.5">/</span>
+            <span className={lang === "en" ? "text-green-600" : ""}>EN</span>
+          </button>
+
           <Link
             href={user ? "/profili/shto-mjet" : "/login"}
             className="hidden sm:block bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors duration-200"
           >
-            + Shto Njoftim
+            {t.nav.addListing}
           </Link>
           {user ? (
             <div className="hidden md:flex items-center gap-2">
               <Link
                 href="/profili"
                 className="flex w-9 h-9 rounded-xl border border-green-500 items-center justify-center text-green-500 transition-colors duration-200"
-                title="Profili im"
+                title={t.nav.myProfile}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="8" r="4" />
@@ -91,16 +103,16 @@ export default function Navbar() {
               <button
                 onClick={handleLogout}
                 className="text-xs text-gray-400 hover:text-red-500 transition-colors"
-                title="Dil"
+                title={t.nav.logout}
               >
-                Dil
+                {t.nav.logout}
               </button>
             </div>
           ) : (
             <Link
               href="/login"
               className="hidden md:flex w-9 h-9 rounded-xl border border-gray-200 hover:border-green-500 items-center justify-center text-gray-500 hover:text-green-500 transition-colors duration-200"
-              title="Hyr / Regjistrohu"
+              title={t.nav.login}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="4" />
@@ -128,9 +140,55 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Side Drawer Overlay */}
       {open && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-1 shadow-lg">
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Mobile Side Drawer */}
+      <div className={`md:hidden fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 shrink-0">
+          <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3" />
+                <rect x="9" y="11" width="14" height="10" rx="2" />
+                <circle cx="12" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+              </svg>
+            </div>
+            <span className="text-lg font-extrabold tracking-tight text-gray-900">
+              Mjet<span className="text-green-500">Market</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-2">
+            {/* SQ/EN toggle mobile */}
+            <button
+              onClick={() => setLang(lang === "sq" ? "en" : "sq")}
+              className="text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <span className={lang === "sq" ? "text-green-600" : ""}>SQ</span>
+              <span className="mx-0.5">/</span>
+              <span className={lang === "en" ? "text-green-600" : ""}>EN</span>
+            </button>
+            <button
+              onClick={() => setOpen(false)}
+              className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+              aria-label={t.nav.closeMenu}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Links */}
+        <div className="flex flex-col gap-1 px-3 py-4 flex-1 overflow-y-auto">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -141,46 +199,50 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+        </div>
+
+        {/* Bottom actions */}
+        <div className="px-3 py-4 border-t border-gray-100 flex flex-col gap-2 shrink-0">
           {user ? (
             <>
               <Link
                 href="/profili"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors mt-1 border-t border-gray-100 pt-3"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                 </svg>
-                Profili im
+                {t.nav.myProfile}
               </Link>
               <button
                 onClick={() => { setOpen(false); handleLogout(); }}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
               >
-                Dil
+                {t.nav.logout}
               </button>
             </>
           ) : (
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors mt-1 border-t border-gray-100 pt-3"
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
               </svg>
-              Hyr / Regjistrohu
+              {t.nav.login}
             </Link>
           )}
           <Link
             href={user ? "/profili/shto-mjet" : "/login"}
             onClick={() => setOpen(false)}
-            className="mt-1 w-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors text-center"
+            className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors text-center"
           >
-            + Shto Njoftim
+            {t.nav.addListing}
           </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 }
