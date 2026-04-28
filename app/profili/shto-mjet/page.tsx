@@ -26,6 +26,8 @@ interface FormState {
   hp: string;
   engine_cc: string;
   consumption: string;
+  doors: string;
+  phone: string;
   description: string;
   images: string[];
 }
@@ -34,7 +36,7 @@ const initialForm: FormState = {
   category: "", brand: "", model: "", year: "", km: "", color: "",
   price: "", fuel: "Naftë", transmission: "Automatik", city: "",
   tire_condition: "", exchange: "", hp: "", engine_cc: "", consumption: "",
-  description: "", images: [],
+  doors: "", phone: "", description: "", images: [],
 };
 
 export default function ShtoMjetPage() {
@@ -102,6 +104,10 @@ export default function ShtoMjetPage() {
       setError("Plotëso fushat: Marka, Modeli, Viti, Çmimi.");
       return;
     }
+    if (!form.phone.trim()) {
+      setError("Numri i telefonit është i detyrueshëm.");
+      return;
+    }
 
     setSaving(true);
     const supabase = createClient();
@@ -126,6 +132,8 @@ export default function ShtoMjetPage() {
       engine_cc:     Number(form.engine_cc) || 0,
       consumption:   Number(form.consumption) || 0,
       description:   form.description || null,
+      doors:         form.doors ? Number(form.doors) : null,
+      phone:         form.phone || null,
       images:        form.images,
     }]);
 
@@ -183,6 +191,10 @@ export default function ShtoMjetPage() {
               <input id="price" name="price" type="number" value={form.price} onChange={onChange} placeholder="p.sh. 18500" className={inputClass} />
             </div>
             <div>
+              <label htmlFor="phone" className={labelClass}>Nr. Telefoni *</label>
+              <input id="phone" name="phone" type="tel" value={form.phone} onChange={onChange} placeholder="+355 6X XXX XXXX" className={inputClass} />
+            </div>
+            <div>
               <label htmlFor="color" className={labelClass}>Ngjyra</label>
               <select id="color" name="color" value={form.color} onChange={onChange} className={selectClass}>
                 <option value="">Zgjidh ngjyrën</option>
@@ -202,6 +214,16 @@ export default function ShtoMjetPage() {
               <select id="transmission" name="transmission" value={form.transmission} onChange={onChange} className={selectClass}>
                 <option>Automatik</option>
                 <option>Manual</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="doors" className={labelClass}>Dyert</label>
+              <select id="doors" name="doors" value={form.doors} onChange={onChange} className={selectClass}>
+                <option value="">—</option>
+                <option value="2">2 dyer</option>
+                <option value="3">3 dyer</option>
+                <option value="4">4 dyer</option>
+                <option value="5">5 dyer</option>
               </select>
             </div>
             <div>
