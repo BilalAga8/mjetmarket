@@ -281,7 +281,7 @@ export const translations = {
       favorites: "Favorites",
     },
   },
-} as const;
+};
 
 type Translations = typeof translations.sq;
 
