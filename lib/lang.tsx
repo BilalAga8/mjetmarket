@@ -10,7 +10,7 @@ export const translations = {
     nav: {
       home: "Kreu",
       search: "Kërko Makina",
-      parts: "Pjesë & Servise",
+      parts: "Pjesë Këmbimi",
       vin: "Kontrollo VIN",
       blog: "Blog",
       faq: "FAQ",
@@ -149,7 +149,7 @@ export const translations = {
     nav: {
       home: "Home",
       search: "Search Cars",
-      parts: "Parts & Services",
+      parts: "Spare Parts",
       vin: "Check VIN",
       blog: "Blog",
       faq: "FAQ",
