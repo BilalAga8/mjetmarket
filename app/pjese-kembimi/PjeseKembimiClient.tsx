@@ -4,12 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { PartCategory } from "../../data/partCategories";
-import { partPartners } from "../../data/partPartners";
+
 import PartRequestForm from "../../components/PartRequestForm";
 
-const bgColors = ["bg-green-600", "bg-blue-600", "bg-orange-500", "bg-purple-600"];
-
-interface Service { id: number; name: string; city: string; phone: string; category: string; }
 
 type Quality = "oem" | "ekuivalente" | "ekonomike";
 
@@ -31,7 +28,6 @@ interface Product {
 
 interface Props {
   categories: PartCategory[];
-  services?: Service[];
   products?: Product[];
   initialCategory?: string;
   initialQuality?: string;
@@ -51,7 +47,7 @@ function getCategoryIcon(category: string, categories: PartCategory[]): string {
   return categories.find((c) => c.name === category)?.icon ?? "⚙️";
 }
 
-export default function PjeseKembimiClient({ categories, services = [], products = [], initialCategory = "", initialQuality = "" }: Props) {
+export default function PjeseKembimiClient({ categories, products = [], initialCategory = "", initialQuality = "" }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -64,13 +60,22 @@ export default function PjeseKembimiClient({ categories, services = [], products
 
   const [search, setSearch] = useState("");
 
+  // Vehicle selector state
+  const [yearInput,   setYearInput]   = useState("");
+  const [makeInput,   setMakeInput]   = useState("");
+  const [modelInput,  setModelInput]  = useState("");
+  const [trimInput,   setTrimInput]   = useState("");
+  const [engineInput, setEngineInput] = useState("");
+
   // VIN bar state
-  const [vinInput, setVinInput]     = useState("");
-  const [vinMake, setVinMake]       = useState("");
-  const [vinModel, setVinModel]     = useState("");
-  const [vinYear, setVinYear]       = useState(0);
+  const [vinInput,   setVinInput]   = useState("");
   const [vinLoading, setVinLoading] = useState(false);
-  const [vinError, setVinError]     = useState("");
+  const [vinError,   setVinError]   = useState("");
+
+  // Confirmed vehicle (used for product filtering)
+  const [vinMake, setVinMake]   = useState("");
+  const [vinModel, setVinModel] = useState("");
+  const [vinYear, setVinYear]   = useState(0);
   const [vinConfirmed, setVinConfirmed] = useState(false);
 
   // Filters — initialized from server searchParams
@@ -88,54 +93,53 @@ export default function PjeseKembimiClient({ categories, services = [], products
 
   // Read URL params from /kontrollo redirect
   useEffect(() => {
-    const vin   = searchParams.get("vin")   ?? "";
     const make  = searchParams.get("make")  ?? "";
     const model = searchParams.get("model") ?? "";
     const year  = parseInt(searchParams.get("year") ?? "0");
-
-    if (vin && make && model && year) {
-      setVinInput(vin);
-      setVinMake(make);
-      setVinModel(model);
-      setVinYear(year);
+    if (make && model && year) {
+      setMakeInput(make); setModelInput(model); setYearInput(String(year));
+      setVinMake(make); setVinModel(model); setVinYear(year);
       setVinConfirmed(true);
     }
   }, [searchParams]);
 
+  function handleAddVehicle() {
+    if (!yearInput || !makeInput || !modelInput) return;
+    setVinMake(makeInput);
+    setVinModel(modelInput);
+    setVinYear(parseInt(yearInput));
+    setVinConfirmed(true);
+  }
+
   async function handleVinCheck() {
     const v = vinInput.trim().toUpperCase();
     if (v.length !== 17) { setVinError("VIN-i duhet të ketë 17 karaktere."); return; }
-    setVinError("");
-    setVinLoading(true);
+    setVinError(""); setVinLoading(true);
     try {
       const res  = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${v}?format=json`);
       const json = await res.json();
       const get  = (field: string) => json.Results?.find((r: { Variable: string }) => r.Variable === field)?.Value ?? "";
-      const make  = get("Make");
-      const model = get("Model");
+      const make  = get("Make"); const model = get("Model");
       const year  = parseInt(get("Model Year")) || 0;
-      if (!make || !model || !year) {
-        setVinError("VIN-i nuk u njoh. Provo /kontrollo për kërkimin e plotë.");
-        setVinLoading(false);
-        return;
-      }
+      if (!make || !model || !year) { setVinError("VIN-i nuk u njoh."); setVinLoading(false); return; }
+      setMakeInput(make); setModelInput(model); setYearInput(String(year));
       setVinMake(make); setVinModel(model); setVinYear(year);
       setVinConfirmed(true);
-    } catch {
-      setVinError("Gabim. Provo përsëri.");
-    } finally {
-      setVinLoading(false);
-    }
+    } catch { setVinError("Gabim. Provo përsëri."); }
+    finally { setVinLoading(false); }
   }
 
-  function clearVin() {
-    setVinInput(""); setVinMake(""); setVinModel(""); setVinYear(0);
-    setVinConfirmed(false); setVinError("");
+  function clearVehicle() {
+    setYearInput(""); setMakeInput(""); setModelInput("");
+    setTrimInput(""); setEngineInput("");
+    setVinInput(""); setVinError("");
+    setVinMake(""); setVinModel(""); setVinYear(0);
+    setVinConfirmed(false);
   }
 
   function openForm(partName: string) {
     setSelectedPart(partName);
-    setSelectedVin(vinInput);
+    setSelectedVin("");
     setSelectedMake(vinMake);
     setSelectedModel(vinModel);
     setSelectedYear(vinYear ? String(vinYear) : "");
@@ -166,7 +170,7 @@ export default function PjeseKembimiClient({ categories, services = [], products
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 py-10 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 flex-wrap">
             <Link href="/" className="hover:text-green-600 transition-colors">Kreu</Link>
@@ -180,216 +184,287 @@ export default function PjeseKembimiClient({ categories, services = [], products
             )}
           </nav>
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">Pjesë Këmbimi</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            Fut VIN-in e makinës për pjesë të përshtatshme, ose kërko sipas kategorisë.
-          </p>
+          <p className="text-gray-500 text-sm mb-6">Shto mjetin tënd për të parë pjesët e përshtatshme.</p>
 
-          {/* VIN Bar */}
+          {/* Vehicle Selector */}
           {!vinConfirmed ? (
-            <div className="max-w-2xl">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  value={vinInput}
-                  onChange={(e) => setVinInput(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && handleVinCheck()}
-                  maxLength={17}
-                  placeholder="Fut VIN-in (17 karaktere) për filtrimin e pjesëve..."
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                />
+            <div>
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center flex-wrap">
+                {/* Year */}
+                <div className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white min-w-[100px]">
+                  <label className="text-[10px] text-gray-400 block leading-none mb-0.5">Viti</label>
+                  <select value={yearInput} onChange={(e) => setYearInput(e.target.value)}
+                    className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight">
+                    <option value="">--</option>
+                    {Array.from({ length: 36 }, (_, i) => 2025 - i).map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Make */}
+                <div className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white min-w-[130px]">
+                  <label className="text-[10px] text-gray-400 block leading-none mb-0.5">Marka</label>
+                  <select value={makeInput} onChange={(e) => setMakeInput(e.target.value)}
+                    className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight">
+                    <option value="">--</option>
+                    {["Alfa Romeo","Audi","BMW","Chevrolet","Citroën","Dacia","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Land Rover","Lancia","Mazda","Mercedes-Benz","Mitsubishi","Nissan","Opel","Peugeot","Porsche","Renault","Seat","Skoda","Subaru","Suzuki","Toyota","Volkswagen","Volvo"].map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Model */}
+                <div className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white min-w-[130px]">
+                  <label className="text-[10px] text-gray-400 block leading-none mb-0.5">Modeli</label>
+                  <input value={modelInput} onChange={(e) => setModelInput(e.target.value)}
+                    placeholder="p.sh. 320d"
+                    className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight placeholder:font-normal placeholder:text-gray-400" />
+                </div>
+                {/* Trim */}
+                <div className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white min-w-[110px]">
+                  <label className="text-[10px] text-gray-400 block leading-none mb-0.5">Trim</label>
+                  <input value={trimInput} onChange={(e) => setTrimInput(e.target.value)}
+                    placeholder="p.sh. Sport"
+                    className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight placeholder:font-normal placeholder:text-gray-400" />
+                </div>
+                {/* Engine */}
+                <div className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white min-w-[110px]">
+                  <label className="text-[10px] text-gray-400 block leading-none mb-0.5">Motori</label>
+                  <input value={engineInput} onChange={(e) => setEngineInput(e.target.value)}
+                    placeholder="p.sh. 2.0L"
+                    className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight placeholder:font-normal placeholder:text-gray-400" />
+                </div>
+                {/* Button */}
                 <button
-                  onClick={handleVinCheck}
-                  disabled={vinLoading}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+                  onClick={handleAddVehicle}
+                  disabled={!yearInput || !makeInput || !modelInput}
+                  className="bg-green-600 disabled:opacity-40 text-white font-bold px-6 py-2 rounded-full whitespace-nowrap text-sm"
                 >
-                  {vinLoading ? "..." : "Kontrollo makinën time"}
+                  Shto mjetin
                 </button>
               </div>
-              {vinError && <p className="text-xs text-red-500 mt-1.5">{vinError}</p>}
-              <p className="text-xs text-gray-400 mt-1.5">
-                Ose <Link href="/kontrollo" className="text-green-600 hover:underline">hap VIN Tool-in e plotë</Link> për analiza të detajuara
-              </p>
+
+              {/* VIN opsion dytësor */}
+              <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <span className="text-xs text-gray-400 shrink-0">Ose kërko me VIN:</span>
+                <div className="flex gap-2 flex-1 max-w-sm">
+                  <input
+                    value={vinInput}
+                    onChange={(e) => setVinInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === "Enter" && handleVinCheck()}
+                    maxLength={17}
+                    placeholder="17 karaktere..."
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-green-500"
+                  />
+                  <button
+                    onClick={handleVinCheck}
+                    disabled={vinLoading}
+                    className="bg-gray-800 disabled:opacity-60 text-white text-xs font-semibold px-4 py-1.5 rounded-lg"
+                  >
+                    {vinLoading ? "..." : "Kontrollo"}
+                  </button>
+                </div>
+                {vinError && <p className="text-xs text-red-500">{vinError}</p>}
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
-                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                    <polyline points="2 6 5 9 10 3"/>
-                  </svg>
-                </div>
-                <span className="text-sm font-bold text-green-800">{vinMake} {vinModel} {vinYear}</span>
-                <span className="text-xs text-green-600 font-mono ml-1">{vinInput}</span>
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
+                <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm font-bold text-green-800">{vinYear} {vinMake} {vinModel}</span>
+                {trimInput && <span className="text-xs text-green-600">{trimInput}</span>}
               </div>
-              <button onClick={clearVin} className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-                × Fshi
+              <button onClick={clearVehicle} className="text-sm text-gray-400 underline">
+                Ndrysho mjetin
               </button>
-              <span className="text-xs text-gray-500">
-                {filteredProducts.length} pjesë të përshtatshme
-              </span>
+              <span className="text-sm text-gray-500">{filteredProducts.length} pjesë të përshtatshme</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Partners */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Partnerët tanë</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {partPartners.map((partner, i) => (
-            <div key={partner.id} className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-3">
-              <div className={`w-10 h-10 ${bgColors[i]} rounded-xl flex items-center justify-center text-white text-xs font-extrabold shrink-0`}>
-                {partner.logo}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-800 truncate">{partner.name}</p>
-                <p className="text-xs text-gray-400">{partner.city}</p>
-              </div>
-              <div className="shrink-0 bg-red-500 text-white text-xs font-extrabold px-2 py-0.5 rounded-lg">
-                -{partner.discount}%
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Products or Categories */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {showProducts ? (
           <>
-            {/* Filters + Grid */}
-            <div className="flex flex-col sm:flex-row gap-6">
-              {/* Sidebar filters */}
-              <aside className="sm:w-48 shrink-0 flex flex-col gap-3">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Filtro</p>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Kategoria</label>
-                  <select value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); syncUrl(e.target.value, filterQuality); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-green-500 bg-white">
-                    <option value="">Të gjitha</option>
-                    {categories.map((c) => <option key={c.id} value={c.name}>{c.icon} {c.name}</option>)}
-                  </select>
+            <div className="flex gap-8">
+              {/* ── Sidebar filtrat (eBay stil) ── */}
+              <aside className="hidden sm:block w-44 shrink-0">
+                {/* Kategoria */}
+                <div className="mb-6">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Kategoria</p>
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => { setFilterCategory(""); syncUrl("", filterQuality); }}
+                      className={`text-left text-sm py-1.5 px-2 rounded-lg ${filterCategory === "" ? "font-bold text-green-600 bg-green-50" : "text-gray-600"}`}
+                    >
+                      Të gjitha
+                    </button>
+                    {categories.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => { setFilterCategory(c.name); syncUrl(c.name, filterQuality); }}
+                        className={`text-left text-sm py-1.5 px-2 rounded-lg flex items-center gap-2 ${filterCategory === c.name ? "font-bold text-green-600 bg-green-50" : "text-gray-600"}`}
+                      >
+                        <span className="text-base">{c.icon}</span>
+                        <span className="truncate">{c.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Cilësia */}
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Cilësia</label>
-                  <select value={filterQuality} onChange={(e) => { setFilterQuality(e.target.value); syncUrl(filterCategory, e.target.value); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-green-500 bg-white">
-                    <option value="">Të gjitha</option>
-                    <option value="oem">OEM</option>
-                    <option value="ekuivalente">Ekuivalente</option>
-                    <option value="ekonomike">Ekonomike</option>
-                  </select>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Cilësia</p>
+                  <div className="flex flex-col">
+                    {[{ val: "", label: "Të gjitha" }, { val: "oem", label: "OEM" }, { val: "ekuivalente", label: "Ekuivalente" }, { val: "ekonomike", label: "Ekonomike" }].map((q) => (
+                      <button
+                        key={q.val}
+                        onClick={() => { setFilterQuality(q.val); syncUrl(filterCategory, q.val); }}
+                        className={`text-left text-sm py-1.5 px-2 rounded-lg ${filterQuality === q.val ? "font-bold text-green-600 bg-green-50" : "text-gray-600"}`}
+                      >
+                        {q.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                {(filterCategory || filterQuality || vinConfirmed) && (
-                  <button onClick={() => { setFilterCategory(""); setFilterQuality(""); clearVin(); syncUrl("", ""); }}
-                    className="text-xs text-green-600 hover:underline text-left">
+
+                {(filterCategory || filterQuality) && (
+                  <button
+                    onClick={() => { setFilterCategory(""); setFilterQuality(""); syncUrl("", ""); }}
+                    className="mt-4 text-xs text-red-400 underline"
+                  >
                     × Pastro filtrat
                   </button>
                 )}
               </aside>
 
-              {/* Product grid */}
-              <div className="flex-1">
+              {/* ── Lista e produkteve ── */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-400 mb-4">{filteredProducts.length} produkte</p>
+
                 {filteredProducts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-400 text-sm mb-2">
+                  <div className="py-16 text-center">
+                    <p className="text-gray-400 text-sm mb-3">
                       {vinConfirmed
-                        ? `Nuk u gjetën pjesë për ${vinMake} ${vinModel} ${vinYear} me filtrat e zgjedhur.`
+                        ? `Nuk u gjetën pjesë për ${vinMake} ${vinModel} ${vinYear}.`
                         : "Nuk u gjetën produkte."}
                     </p>
-                    <button onClick={() => openForm("")} className="text-green-600 text-sm font-semibold hover:underline">
+                    <button onClick={() => openForm("")} className="text-green-600 text-sm font-semibold underline">
                       Kërko manualisht →
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col divide-y divide-gray-200">
                     {filteredProducts.map((p) => (
-                      <div key={p.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                        {/* Photo */}
-                        <div className="relative h-28 bg-gray-50 flex items-center justify-center">
-                          {p.photo_key && p.photo_key.startsWith("http")
-                            ? <img src={p.photo_key} alt={p.name} className="h-full w-full object-cover" />
-                            : <span className="text-4xl">{getCategoryIcon(p.category, categories)}</span>
-                          }
-                          {vinConfirmed && (
-                            <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                              ✓ Përshtatet
-                            </span>
+                      <div key={p.id} className="flex gap-5 sm:gap-8 py-5 first:pt-0">
+                        {/* Foto */}
+                        <div className="w-28 h-28 sm:w-40 sm:h-40 shrink-0 bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                          {p.photo_key && p.photo_key.startsWith("http") ? (
+                            <img src={p.photo_key} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-4xl sm:text-5xl opacity-40">{getCategoryIcon(p.category, categories)}</span>
                           )}
                         </div>
+
                         {/* Info */}
-                        <div className="p-3 flex flex-col flex-1">
-                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                            {p.oem_code && <span className="text-xs text-gray-400 font-mono">{p.oem_code}</span>}
-                            <span className={`text-xs px-1.5 py-0.5 rounded border font-semibold ${qualityColors[p.quality]}`}>
-                              {qualityLabels[p.quality]}
-                            </span>
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <p className="text-base sm:text-lg font-bold text-gray-900 leading-snug mb-1">{p.name}</p>
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <span className={`text-xs px-2 py-0.5 rounded border font-semibold ${qualityColors[p.quality]}`}>
+                                {qualityLabels[p.quality]}
+                              </span>
+                              {vinConfirmed && (
+                                <span className="text-xs bg-green-50 border border-green-200 text-green-700 font-semibold px-2 py-0.5 rounded">
+                                  ✓ Përshtatet
+                                </span>
+                              )}
+                            </div>
+                            {p.oem_code && <p className="text-sm text-gray-400 font-mono mb-1">Kodi OEM: {p.oem_code}</p>}
+                            {p.compatible_makes.length > 0 && (
+                              <p className="text-sm text-gray-500 mb-1">
+                                Për: {p.compatible_makes.slice(0, 4).join(", ")}
+                                {p.compatible_makes.length > 4 && ` +${p.compatible_makes.length - 4}`}
+                              </p>
+                            )}
+                            {(p.year_from || p.year_to) && (
+                              <p className="text-sm text-gray-400">Vitet: {p.year_from ?? "?"} – {p.year_to ?? "sot"}</p>
+                            )}
                           </div>
-                          <p className="text-sm font-bold text-gray-900 leading-tight mb-1 flex-1">{p.name}</p>
-                          {p.shops_count > 0 && (
-                            <p className="text-xs text-gray-400 mb-2">⭐ {p.shops_count} dyqane ofertojnë</p>
-                          )}
-                          {(p.price_from || p.price_to) && (
-                            <p className="text-sm font-bold text-green-600 mb-2">
-                              nga {p.price_from ?? "?"} – {p.price_to ?? "?"}€
-                            </p>
-                          )}
-                          <button
-                            onClick={() => openForm(p.name)}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-xl transition-colors"
-                          >
-                            Kërko Ofertë
-                          </button>
+                          <div className="flex items-end justify-between mt-3 gap-3">
+                            <div>
+                              {(p.price_from || p.price_to) ? (
+                                <p className="text-xl sm:text-2xl font-extrabold text-gray-900">
+                                  {p.price_from && p.price_to ? `${p.price_from} – ${p.price_to}€` : `${p.price_from ?? p.price_to}€`}
+                                </p>
+                              ) : (
+                                <p className="text-sm text-gray-400">Çmim me kërkesë</p>
+                              )}
+                              {p.shops_count > 0 && <p className="text-sm text-gray-400 mt-0.5">{p.shops_count} dyqane ofertojnë</p>}
+                            </div>
+                            <button onClick={() => openForm(p.name)}
+                              className="bg-green-600 text-white text-sm font-bold px-6 py-2.5 rounded-full shrink-0">
+                              Kërko Ofertë
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
 
-                    {/* Last card — manual request */}
-                    <button
-                      onClick={() => openForm("")}
-                      className="bg-white border-2 border-dashed border-gray-200 hover:border-green-400 rounded-2xl flex flex-col items-center justify-center gap-2 p-4 min-h-[200px] transition-colors group"
-                    >
-                      <span className="text-2xl text-gray-300 group-hover:text-green-400 transition-colors">+</span>
-                      <p className="text-xs text-gray-400 group-hover:text-green-600 text-center font-semibold transition-colors">
-                        Nuk gjen pjesën?<br />Kërko manualisht →
-                      </p>
-                    </button>
+                    <div className="py-5 flex items-center justify-between">
+                      <p className="text-sm text-gray-400">Nuk gjen pjesën që kërkon?</p>
+                      <button onClick={() => openForm("")}
+                        className="border border-green-600 text-green-600 text-sm font-bold px-5 py-2 rounded-full">
+                        Kërko manualisht
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                <p className="text-xs text-gray-400 mt-4 text-center">Produktet po shtohen vazhdimisht</p>
+                <p className="text-xs text-gray-400 mt-6 text-center">Produktet po shtohen vazhdimisht</p>
               </div>
             </div>
           </>
         ) : (
           <>
-            {/* Fallback: category icons */}
-            <div className="relative max-w-md mb-6">
+            {/* Search bar */}
+            <div className="relative max-w-md mb-4">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
               </svg>
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="Kërko pjesën..."
+                placeholder="Kërko kategori pjesësh..."
                 className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500" />
             </div>
-
-            <p className="text-xs text-gray-400 mb-4">Produktet po shtohen së shpejti — kërko tani sipas kategorisë:</p>
 
             {filteredCategories.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-400 text-sm">Nuk u gjet asnjë kategori për &quot;{search}&quot;</p>
-                <button onClick={() => openForm(search)} className="mt-4 text-green-600 text-sm font-semibold hover:underline">
+                <button onClick={() => openForm(search)} className="mt-4 text-green-600 text-sm font-semibold underline">
                   Kërko &quot;{search}&quot; si pjesë të posaçme →
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="flex flex-col divide-y divide-gray-200">
                 {filteredCategories.map((cat) => (
-                  <button key={cat.id} onClick={() => openForm(cat.name)}
-                    className="bg-white border border-gray-200 rounded-2xl p-4 text-center hover:border-green-400 hover:shadow-md transition-all duration-150 group">
-                    <div className="text-3xl mb-2">{cat.icon}</div>
-                    <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 leading-tight">{cat.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{cat.nameEn}</p>
-                  </button>
+                  <div key={cat.id} className="bg-white flex items-center gap-4 py-3.5 px-1 first:pt-0">
+                    {/* Ikona */}
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl sm:text-3xl">{cat.icon}</span>
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-bold text-gray-900">{cat.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-400">{cat.nameEn}</p>
+                    </div>
+                    {/* Butoni */}
+                    <button onClick={() => openForm(cat.name)}
+                      className="shrink-0 bg-green-600 text-white text-xs sm:text-sm font-bold px-4 sm:px-6 py-2 sm:py-2.5 rounded-full">
+                      Kërko
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -421,7 +496,6 @@ export default function PjeseKembimiClient({ categories, services = [], products
               preselectedModel={selectedModel}
               preselectedYear={selectedYear}
               onClose={() => setModalOpen(false)}
-              services={services}
             />
           </div>
         </div>

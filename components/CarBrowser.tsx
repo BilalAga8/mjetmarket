@@ -6,17 +6,12 @@ import Image from "next/image";
 import { Vehicle, Category, categoryIcons } from "../data/vehicles";
 import { Shop } from "../data/shops";
 import CarCard from "./CarCard";
-import PartnerShopsBar from "./PartnerShopsBar";
+
 import BannerSlideshow from "./BannerSlideshow";
 import FeaturedCar from "./FeaturedCar";
 import NewsletterSection from "./NewsletterSection";
 
-const partnerBg = ["bg-green-600", "bg-blue-600", "bg-orange-500", "bg-purple-600"];
-
-interface Service { id: number; name: string; category: string; city: string; phone: string; logo: string; verified: boolean; }
-interface Partner { id: string; name: string; city: string; discount: number; phone: string; logo: string; type: string; }
-
-export default function CarBrowser({ cars, shops, services, partners }: { readonly cars: Vehicle[]; readonly shops: Shop[]; readonly services: Service[]; readonly partners: Partner[] }) {
+export default function CarBrowser({ cars, shops }: { readonly cars: Vehicle[]; readonly shops: Shop[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [fuel, setFuel] = useState("");
@@ -136,7 +131,6 @@ export default function CarBrowser({ cars, shops, services, partners }: { readon
         </div>
       </section>
 
-      <PartnerShopsBar services={services} />
       {shops.length > 0 && <BannerSlideshow shops={shops} />}
 
       {/* Makina e Javës */}
@@ -179,58 +173,6 @@ export default function CarBrowser({ cars, shops, services, partners }: { readon
 
       <NewsletterSection />
 
-      {/* Dyqane pjesësh këmbimi */}
-      <div className="px-4 sm:px-14 pb-12 border-t border-gray-100 pt-10">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Dyqane Pjesësh Këmbimi</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Partnerët tanë të verifikuar — porositni direkt online</p>
-          </div>
-          <a href="/pjese-kembimi" className="text-sm text-green-600 font-semibold hover:underline hidden sm:block">
-            Shiko të gjitha →
-          </a>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {partners.map((partner, i) => (
-            <a
-              key={partner.id}
-              href="/pjese-kembimi"
-              className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-4 hover:border-green-400 hover:shadow-md transition-all group"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className={`w-12 h-12 ${partnerBg[i]} rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0`}>
-                  {partner.logo}
-                </div>
-                <span className="bg-red-500 text-white text-xs font-extrabold px-2.5 py-1 rounded-lg">
-                  -{partner.discount}%
-                </span>
-              </div>
-
-              {/* Info */}
-              <div>
-                <p className="font-bold text-gray-900 group-hover:text-green-700 transition-colors">{partner.name}</p>
-                <p className="text-sm text-gray-400 mt-0.5">{partner.city}, Shqipëri</p>
-              </div>
-
-              {/* Phone */}
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.64 3.45 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z" />
-                </svg>
-                {partner.phone}
-              </div>
-
-              {/* CTA */}
-              <div className="mt-auto pt-1 border-t border-gray-100">
-                <span className="text-sm font-semibold text-green-600 group-hover:text-green-700">
-                  Kërko Pjesën →
-                </span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
     </>
   );
 }

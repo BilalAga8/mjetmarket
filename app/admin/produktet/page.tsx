@@ -86,8 +86,29 @@ function ProductForm({ initial, onSave, onCancel, pending }: {
   pending: boolean;
 }) {
   const [form, setForm] = useState(initial);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const inputCls = "w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500 placeholder:text-gray-600";
   const labelCls = "text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block";
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoError("");
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("products").getPublicUrl(path);
+      setForm((p) => ({ ...p, photo_key: data.publicUrl }));
+    } catch (err: unknown) {
+      setPhotoError(err instanceof Error ? err.message : "Gabim gjatë ngarkimit.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -136,10 +157,52 @@ function ProductForm({ initial, onSave, onCancel, pending }: {
           <option value="ekonomike">Ekonomike</option>
         </select>
       </div>
-      <div>
-        <label className={labelCls}>Foto (URL ose lër bosh)</label>
-        <input value={form.photo_key ?? ""} onChange={(e) => setForm(p => ({ ...p, photo_key: e.target.value }))}
-          placeholder="https://... ose /parts/oil-filter.jpg" className={inputCls} />
+      <div className="md:col-span-2">
+        <label className={labelCls}>Foto e produktit</label>
+        <div className="flex gap-4 items-start">
+          {/* Preview */}
+          <div className="w-24 h-24 shrink-0 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden flex items-center justify-center">
+            {form.photo_key ? (
+              <img src={form.photo_key} alt="preview" className="w-full h-full object-cover" />
+            ) : (
+              <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 3h18M3 3v18M3 3l18 18" />
+              </svg>
+            )}
+          </div>
+          {/* Upload zone */}
+          <div className="flex-1">
+            <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+              photoUploading ? "border-gray-700 opacity-60" : "border-gray-700 hover:border-green-500"
+            } bg-gray-800/50`}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+                disabled={photoUploading}
+              />
+              {photoUploading ? (
+                <span className="text-sm text-gray-400">Duke ngarkuar...</span>
+              ) : (
+                <>
+                  <svg className="w-6 h-6 text-gray-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span className="text-xs text-gray-400 font-semibold">Kliko për të ngarkuar foton</span>
+                  <span className="text-xs text-gray-600 mt-0.5">JPG, PNG, WebP</span>
+                </>
+              )}
+            </label>
+            {photoError && <p className="text-xs text-red-400 mt-1.5">{photoError}</p>}
+            {form.photo_key && !photoUploading && (
+              <button type="button" onClick={() => setForm((p) => ({ ...p, photo_key: "" }))}
+                className="text-xs text-red-400 hover:underline mt-1.5">
+                × Hiq foton
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       <div className="md:col-span-2">
         <label className={labelCls}>Marka të përshtatshme (Enter ose , për të shtuar · bosh = të gjitha)</label>

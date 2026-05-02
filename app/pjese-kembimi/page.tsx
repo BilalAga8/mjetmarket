@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import PjeseKembimiClient from "./PjeseKembimiClient";
 import { partCategories } from "../../data/partCategories";
 import { createClient } from "@/lib/supabase-server";
-import ServiceCard from "../../components/ServiceCard";
 
 const BASE = "https://www.mjetmarket.com";
 
@@ -61,18 +60,16 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export const revalidate = 0;
 
-interface Service { id: number; name: string; city: string; phone: string; category: string; }
-
 export default async function PjeseKembimiPage({ searchParams }: PageProps) {
   const { category, quality } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: servicesData }, { data: productsData }] = await Promise.all([
-    supabase.from("services").select("*").order("verified", { ascending: false }).order("name"),
-    supabase.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-  ]);
+  const { data: productsData } = await supabase
+    .from("products")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
-  const services = servicesData ?? [];
   const products = productsData ?? [];
 
   // JSON-LD: BreadcrumbList
@@ -129,7 +126,6 @@ export default async function PjeseKembimiPage({ searchParams }: PageProps) {
       <Suspense fallback={
         <PjeseKembimiClient
           categories={partCategories}
-          services={services as Service[]}
           products={[]}
           initialCategory={category}
           initialQuality={quality}
@@ -137,35 +133,11 @@ export default async function PjeseKembimiPage({ searchParams }: PageProps) {
       }>
         <PjeseKembimiClient
           categories={partCategories}
-          services={services as Service[]}
           products={products}
           initialCategory={category}
           initialQuality={quality}
         />
       </Suspense>
-
-      {/* Seksioni i serviseve */}
-      <div className="bg-gray-50 border-t border-gray-200 py-12 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <div>
-              <h2 className="text-2xl font-extrabold text-gray-900">Ku ta instalosh?</h2>
-              <p className="text-gray-500 text-sm mt-0.5">
-                Servise të besuara ku mund të çosh makinën pas porosisë
-              </p>
-            </div>
-          </div>
-          {services.length === 0 ? (
-            <p className="text-gray-400 text-sm">Nuk ka servise të regjistruara ende.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {services.map((s) => (
-                <ServiceCard key={s.id} service={s} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </>
   );
 }

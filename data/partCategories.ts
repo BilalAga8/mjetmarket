@@ -7,6 +7,7 @@ export interface PartCategory {
 }
 
 export const partCategories: PartCategory[] = [
+  { id: "aksesore",         name: "Aksesore",            nameEn: "Accessories",        icon: "🎁",  description: "Aksesore dhe pajisje shtesë" },
   { id: "filtro-vaji",       name: "Filtro Vaji",         nameEn: "Oil Filter",         icon: "🛢️",  description: "Filtro për ndërrimin e vajit" },
   { id: "filtro-ajri",       name: "Filtro Ajri",         nameEn: "Air Filter",         icon: "💨",  description: "Filtro e sistemit të ajrit" },
   { id: "filtro-kabine",     name: "Filtro Kabine",       nameEn: "Cabin Filter",       icon: "🌬️",  description: "Filtro e klimës dhe kabinës" },
@@ -31,5 +32,5 @@ export const partCategories: PartCategory[] = [
   { id: "sensoret",          name: "Sensorë",             nameEn: "Sensors",            icon: "📡",  description: "Sensorë të ndryshëm (lambda, ABS, etj.)" },
   { id: "llambat",           name: "Llamba",              nameEn: "Bulbs & Lights",     icon: "💡",  description: "Llamba dhe ndriçim" },
   { id: "pasqyrat",          name: "Pasqyrat",            nameEn: "Mirrors",            icon: "🪞",  description: "Pasqyra anësore dhe brendshme" },
-  { id: "zhveshja",          name: "Zhveshja",            nameEn: "Brake Shoes",        icon: "🛞",  description: "Zhveshje frenash (tambur)" },
+  { id: "goma",              name: "Goma",                nameEn: "Tires",              icon: "🛞",  description: "Goma për makinë" },
 ];
