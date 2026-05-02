@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { PartCategory } from "../../data/partCategories";
 
 import PartRequestForm from "../../components/PartRequestForm";
+import { MAKES } from "../../data/makes";
 
 
 type Quality = "oem" | "ekuivalente" | "ekonomike";
@@ -149,13 +150,15 @@ export default function PjeseKembimiClient({ categories, products = [], initialC
   // Filter products
   const filteredProducts = products.filter((p) => {
     const makeMatch = p.compatible_makes.length === 0 ||
-      (vinMake && p.compatible_makes.some((m) => m.toLowerCase().includes(vinMake.toLowerCase())));
+      (vinMake && p.compatible_makes.some((m) => m.toLowerCase() === vinMake.toLowerCase()));
+    const modelMatch = p.compatible_models.length === 0 ||
+      (vinModel && p.compatible_models.some((m) => m.toLowerCase().includes(vinModel.toLowerCase())));
     const yearMatch = (!p.year_from || !vinYear || vinYear >= p.year_from) &&
       (!p.year_to   || !vinYear || vinYear <= p.year_to);
     const catMatch  = !filterCategory || p.category === filterCategory;
     const qualMatch = !filterQuality  || p.quality  === filterQuality;
 
-    if (vinConfirmed) return makeMatch && yearMatch && catMatch && qualMatch;
+    if (vinConfirmed) return makeMatch && modelMatch && yearMatch && catMatch && qualMatch;
     return catMatch && qualMatch;
   });
 
@@ -207,7 +210,7 @@ export default function PjeseKembimiClient({ categories, products = [], initialC
                   <select value={makeInput} onChange={(e) => setMakeInput(e.target.value)}
                     className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent leading-tight">
                     <option value="">--</option>
-                    {["Alfa Romeo","Audi","BMW","Chevrolet","Citroën","Dacia","Fiat","Ford","Honda","Hyundai","Jeep","Kia","Land Rover","Lancia","Mazda","Mercedes-Benz","Mitsubishi","Nissan","Opel","Peugeot","Porsche","Renault","Seat","Skoda","Subaru","Suzuki","Toyota","Volkswagen","Volvo"].map((m) => (
+                    {MAKES.map((m) => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>

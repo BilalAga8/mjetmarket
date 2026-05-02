@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { partCategories } from "@/data/partCategories";
+import { MAKES } from "@/data/makes";
 
 const supabase = createClient();
 
@@ -30,8 +31,6 @@ const qualityLabels: Record<Quality, { label: string; cls: string }> = {
   ekuivalente:{ label: "Ekuivalente", cls: "bg-orange-500/15 text-orange-400" },
   ekonomike:  { label: "Ekonomike",   cls: "bg-gray-500/15 text-gray-400" },
 };
-
-const POPULAR_MAKES = ["BMW", "Mercedes-Benz", "Volkswagen", "Audi", "Toyota", "Honda", "Hyundai", "Kia", "Ford", "Opel", "Fiat", "Renault", "Peugeot"];
 
 const emptyForm = {
   name: "", oem_code: "", category: partCategories[0]?.name ?? "",
@@ -205,17 +204,52 @@ function ProductForm({ initial, onSave, onCancel, pending }: {
         </div>
       </div>
       <div className="md:col-span-2">
-        <label className={labelCls}>Marka të përshtatshme (Enter ose , për të shtuar · bosh = të gjitha)</label>
-        <TagInput values={form.compatible_makes}
-          onChange={(v) => setForm(p => ({ ...p, compatible_makes: v }))}
-          placeholder="BMW, Mercedes-Benz..."
-          suggestions={POPULAR_MAKES} />
+        <label className={labelCls}>
+          Marka të përshtatshme
+          <span className="ml-2 text-gray-600 font-normal normal-case tracking-normal">
+            ({form.compatible_makes.length === 0 ? "të gjitha" : `${form.compatible_makes.length} të zgjedhura`})
+          </span>
+        </label>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {MAKES.map((make) => {
+            const active = form.compatible_makes.includes(make);
+            return (
+              <button
+                key={make}
+                type="button"
+                onClick={() => setForm(p => ({
+                  ...p,
+                  compatible_makes: active
+                    ? p.compatible_makes.filter((m) => m !== make)
+                    : [...p.compatible_makes, make],
+                }))}
+                className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                  active
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
+                }`}
+              >
+                {make}
+              </button>
+            );
+          })}
+        </div>
+        {form.compatible_makes.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setForm(p => ({ ...p, compatible_makes: [] }))}
+            className="mt-2 text-xs text-red-400 hover:underline"
+          >
+            × Pastro (të gjitha markat)
+          </button>
+        )}
       </div>
       <div className="md:col-span-2">
         <label className={labelCls}>Modele të përshtatshme (bosh = të gjitha)</label>
         <TagInput values={form.compatible_models}
           onChange={(v) => setForm(p => ({ ...p, compatible_models: v }))}
           placeholder="320d, C220, Golf..." />
+        <p className="text-xs text-gray-600 mt-1">Shto modelet me Enter ose presje. Duhet të përputhet me atë që shkruan blerësi.</p>
       </div>
       <div className="grid grid-cols-2 gap-3 md:col-span-1">
         <div>

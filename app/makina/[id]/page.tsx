@@ -7,18 +7,21 @@ export async function generateMetadata({ params }: { readonly params: Promise<{ 
   const { id } = await params;
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(id);
   const { data: car } = await (isUUID
-    ? supabase.from("vehicles").select("brand,model,year,price,images,description").eq("id", id).single()
-    : supabase.from("vehicles").select("brand,model,year,price,images,description").eq("slug", id).single());
+    ? supabase.from("vehicles").select("id,slug,brand,model,year,price,images,description").eq("id", id).single()
+    : supabase.from("vehicles").select("id,slug,brand,model,year,price,images,description").eq("slug", id).single());
   if (!car) return { title: "Mjet | MjetMarket" };
   const title = `${car.brand} ${car.model} ${car.year} — ${car.price.toLocaleString()} €`;
   const description = car.description || `${car.brand} ${car.model} ${car.year}, ${car.price.toLocaleString()} € në MjetMarket.`;
+  const canonicalSlug = car.slug ?? car.id;
   return {
     title,
     description,
+    alternates: { canonical: `https://www.mjetmarket.com/makina/${canonicalSlug}` },
     openGraph: {
       title,
       description,
-      images: car.images?.[0] ? [{ url: car.images[0] }] : [],
+      url: `https://www.mjetmarket.com/makina/${canonicalSlug}`,
+      images: car.images?.[0] ? [{ url: car.images[0], width: 1200, height: 800, alt: title }] : [],
       type: "website",
     },
   };
@@ -95,8 +98,34 @@ export default async function CarPage({
     { label: "Makina Ndrrohet", value: car.exchange ? exchangeLabel[car.exchange] ?? car.exchange : "Nuk Ndrrohet" },
   ];
 
+  const canonicalSlug = car.slug ?? car.id;
+  const carJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    name: `${car.brand} ${car.model} ${car.year}`,
+    brand: { "@type": "Brand", name: car.brand },
+    model: car.model,
+    modelDate: String(car.year),
+    url: `https://www.mjetmarket.com/makina/${canonicalSlug}`,
+    image: car.images?.[0] ?? undefined,
+    description: car.description || `${car.brand} ${car.model} ${car.year} në shitje në MjetMarket.`,
+    ...(car.fuel && { fuelType: car.fuel }),
+    ...(car.km && { mileageFromOdometer: { "@type": "QuantitativeValue", value: car.km, unitCode: "KMT" } }),
+    ...(car.engine_cc && { vehicleEngine: { "@type": "EngineSpecification", engineDisplacement: { "@type": "QuantitativeValue", value: car.engine_cc, unitCode: "CMQ" } } }),
+    ...(car.transmission && { vehicleTransmission: car.transmission }),
+    ...(car.city && { vehicleLocation: { "@type": "Place", name: car.city, addressCountry: "AL" } }),
+    offers: {
+      "@type": "Offer",
+      price: car.price,
+      priceCurrency: "EUR",
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: "MjetMarket", url: "https://www.mjetmarket.com" },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(carJsonLd) }} />
       <ViewTracker vehicleId={car.id} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-green-600 mb-6 transition-colors">

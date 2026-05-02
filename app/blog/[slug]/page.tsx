@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("blog_posts")
-    .select("title, excerpt, cover")
+    .select("title, excerpt, cover, date")
     .eq("slug", slug)
     .single();
 
@@ -23,10 +23,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: data.title,
     description: data.excerpt,
+    alternates: { canonical: `https://www.mjetmarket.com/blog/${slug}` },
     openGraph: {
       title: data.title,
       description: data.excerpt,
-      images: [{ url: data.cover || "/hero.jpg" }],
+      url: `https://www.mjetmarket.com/blog/${slug}`,
+      type: "article",
+      publishedTime: data.date,
+      images: [{ url: data.cover || "/hero.jpg", width: 1200, height: 630, alt: data.title }],
     },
   };
 }
@@ -156,8 +160,27 @@ export default async function BlogPostPage({ params }: Props) {
     .neq("slug", slug)
     .limit(2);
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.cover || "https://www.mjetmarket.com/hero.jpg",
+    datePublished: post.date,
+    dateModified: post.date,
+    url: `https://www.mjetmarket.com/blog/${slug}`,
+    author: { "@type": "Organization", name: "MjetMarket", url: "https://www.mjetmarket.com" },
+    publisher: {
+      "@type": "Organization",
+      name: "MjetMarket",
+      logo: { "@type": "ImageObject", url: "https://www.mjetmarket.com/icon.svg" },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `https://www.mjetmarket.com/blog/${slug}` },
+  };
+
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-14">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <Link href="/blog" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mb-8">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
