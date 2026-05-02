@@ -18,6 +18,7 @@ const navItems = [
   { href: "/admin/sherbimet",   label: "Sherbimet",   icon: "⚡" },
   { href: "/admin/blog",        label: "Blog",        icon: "✍️" },
   { href: "/admin/produktet",   label: "Produktet",   icon: "📦" },
+  { href: "/admin/porosi",      label: "Porositë",    icon: "🛒" },
   { href: "/admin/perdoruesit", label: "Përdoruesit", icon: "👤" },
 ];
 

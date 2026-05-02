@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { PartCategory } from "../../data/partCategories";
 
 import PartRequestForm from "../../components/PartRequestForm";
+import BuyNowModal from "../../components/BuyNowModal";
 import { MAKES } from "../../data/makes";
 
 
@@ -58,6 +59,11 @@ export default function PjeseKembimiClient({ categories, products = [], initialC
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedYear, setSelectedYear]  = useState("");
+
+  const [buyNowProduct, setBuyNowProduct] = useState<{
+    id: string; name: string; price_from: number | null; price_to: number | null;
+    oem_code: string | null; quality: string;
+  } | null>(null);
 
   const [search, setSearch] = useState("");
 
@@ -407,9 +413,14 @@ export default function PjeseKembimiClient({ categories, products = [], initialC
                               )}
                               {p.shops_count > 0 && <p className="text-sm text-gray-400 mt-0.5">{p.shops_count} dyqane ofertojnë</p>}
                             </div>
-                            <button onClick={() => openForm(p.name)}
-                              className="bg-green-600 text-white text-sm font-bold px-6 py-2.5 rounded-full shrink-0">
-                              Kërko Ofertë
+                            <button
+                              onClick={() => setBuyNowProduct({
+                                id: p.id, name: p.name,
+                                price_from: p.price_from, price_to: p.price_to,
+                                oem_code: p.oem_code, quality: p.quality,
+                              })}
+                              className="bg-green-600 text-white text-sm font-bold px-6 py-2.5 rounded-full shrink-0 hover:bg-green-700 transition-colors">
+                              Buy Now
                             </button>
                           </div>
                         </div>
@@ -487,7 +498,18 @@ export default function PjeseKembimiClient({ categories, products = [], initialC
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Buy Now Modal */}
+      {buyNowProduct && (
+        <BuyNowModal
+          product={buyNowProduct}
+          vehicleMake={vinMake}
+          vehicleModel={vinModel}
+          vehicleYear={vinYear ? String(vinYear) : ""}
+          onClose={() => setBuyNowProduct(null)}
+        />
+      )}
+
+      {/* Kërko Ofertë Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
